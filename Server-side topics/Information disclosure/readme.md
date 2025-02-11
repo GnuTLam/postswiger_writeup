@@ -59,6 +59,8 @@ Third party: `Apache Struts 2 2.3.31`
 
 ✅ Key `2 2.3.31`
 
+---
+
 ### Lab: Information disclosure on debug page
 **Debugging Data**
 
@@ -82,35 +84,18 @@ Lướt một vòng trang web không thấy có gì khả nghi. Dùng ffuf để
 Ở bài lab này là debugging nên ta sẽ tìm nơi mà có chế độ debug này.
 `ffuf -u https://0a060042045671ca8027856700b8003b.web-security-academy.net/FUZZ -w /usr/share/ffuf/wordlists/common.t
 xt`
-![alt text](image-1.png)
+![alt text](img/image-1.png)
 
-Kiêểm tra cac dương dan moi fuzz dươc
-![alt text](image-2.png)
+Kiểm tra các đường dẫn mới fuzz được
+![alt text](img/image-2.png)
 💡Giải thích
 Ở đây máy chủ enable `Directory listing` dẫn đến tình trạng như trên.
 Chúng ta có thể truy cập vào phpinfo.php để xem thêm thông tin.
 
-![alt text](image-3.png)
+![alt text](img/image-3.png)
 ✅ Key `2 2.3.31`
 
-### Lab: Source code disclosure via backup files
-**Source Code Disclosure via Backup Files**
-- **Rủi ro:** Truy cập được mã nguồn giúp kẻ tấn công dễ hiểu hành vi ứng dụng và thực hiện các cuộc tấn công nghiêm trọng hơn (RCE, SQLi,...).
-- **Thông tin nhạy cảm:** Mã nguồn thường chứa **API keys**, **thông tin đăng nhập back-end** được hard-code sẵn.
-- **Khai thác:**  
-  - Tìm các file mã nguồn bị lộ như `index.php~`, `config.bak`, `backup.zip`.  
-  - Máy chủ thường thực thi file `.php`, nhưng với file backup, nội dung mã nguồn có thể được trả về dưới dạng text.  
-  - **Dấu hiệu nhận biết file backup:**  
-    - Ký tự `~` ở cuối tên file (VD: `login.php~`)  
-    - Đuôi file lạ như `.bak`, `.old`, `.swp`  
-
-**Solution**
-Tiếp tục dùng ffuf để kiểm tra các thư mục hoặc file trên URL mục tiêu.
-![alt text](image-4.png)
-Thấy ngay thư mục backup -> truy cập và xem như nào.
-💡: Ta thấy được source code. Password database được lưu dạng hardcode (rất nguy hiểm).
-![alt text](image-5.png)
-✅ Key `e9w70mx78f57qxckutty3wsu3o63dkz8`
+---
 
 ### Lab: Source code disclosure via backup files
 **Source Code Disclosure via Backup Files**
@@ -125,11 +110,34 @@ Thấy ngay thư mục backup -> truy cập và xem như nào.
 
 **Solution**
 Tiếp tục dùng ffuf để kiểm tra các thư mục hoặc file trên URL mục tiêu.
-![alt text](image-4.png)
+![alt text](img/image-4.png)
 Thấy ngay thư mục backup -> truy cập và xem như nào.
 💡: Ta thấy được source code. Password database được lưu dạng hardcode (rất nguy hiểm).
-![alt text](image-5.png)
+![alt text](img/image-5.png)
 ✅ Key `e9w70mx78f57qxckutty3wsu3o63dkz8`
+
+---
+
+### Lab: Source code disclosure via backup files
+**Source Code Disclosure via Backup Files**
+- **Rủi ro:** Truy cập được mã nguồn giúp kẻ tấn công dễ hiểu hành vi ứng dụng và thực hiện các cuộc tấn công nghiêm trọng hơn (RCE, SQLi,...).
+- **Thông tin nhạy cảm:** Mã nguồn thường chứa **API keys**, **thông tin đăng nhập back-end** được hard-code sẵn.
+- **Khai thác:**  
+  - Tìm các file mã nguồn bị lộ như `index.php~`, `config.bak`, `backup.zip`.  
+  - Máy chủ thường thực thi file `.php`, nhưng với file backup, nội dung mã nguồn có thể được trả về dưới dạng text.  
+  - **Dấu hiệu nhận biết file backup:**  
+    - Ký tự `~` ở cuối tên file (VD: `login.php~`)  
+    - Đuôi file lạ như `.bak`, `.old`, `.swp`  
+
+**Solution**
+Tiếp tục dùng ffuf để kiểm tra các thư mục hoặc file trên URL mục tiêu.
+![alt text](img/image-4.png)
+Thấy ngay thư mục backup -> truy cập và xem như nào.
+💡: Ta thấy được source code. Password database được lưu dạng hardcode (rất nguy hiểm).
+![alt text](img/image-5.png)
+✅ Key `e9w70mx78f57qxckutty3wsu3o63dkz8`
+
+---
 
 ### Lab: Authentication bypass via information disclosure
 **Insecure configuration**
@@ -142,12 +150,36 @@ Thấy ngay thư mục backup -> truy cập và xem như nào.
 **Solution**
 Đăng nhập với tài khoản được cho sẵn. Tìm kiếm và để ý các header HTTP của gói tin bắt được qua Burp.
 Well! chưa có gì hữu ích lắm. Dùng ffuf để tìm kiếm các file hoặc thư mục ẩn khác.
-![alt text](image-6.png)
+![alt text](img/image-6.png)
 Truy cập admin xem sao. Nó hiện thông báo không truy cập. Bắt gói tin trên Burp thử thay đổi method `TRACE` xem có thông tin gì bị rò rỉ không?
-![alt text](image-7.png)
+![alt text](img/image-7.png)
 💡: Gói tin HTTP luôn được gắn kèm header `X-Custom-Ip-Authorization`. Có lẽ backend sử dụng header này để kiểm tra IP trước khi quyết định cho truy cập admin panel. Vậy thử đổi giá trị IP đó thành `127.0.0.1`.
-![alt text](image-8.png)
+![alt text](img/image-8.png)
 => Giờ thì thay đổi gói tin để xóa carlos là xong. Thay `GET /admin/delete?username=carlos` vào gói tin trên.
 
 ✅ Solved!
 ⚠️ **NOTE**: method `TRACE` thực sự hữu ích trong việc xác định các header ẩn.
+
+---
+
+### Lab: Information disclosure in version control history\
+**Version Control History**
+- **Git** thường được sử dụng để quản lý mã nguồn của website. Thư mục mặc định là **`.git`**.  
+- **Rủi ro:** Nếu thư mục `.git` bị lộ trên môi trường production, có thể truy cập qua đường dẫn `/.git`.  
+- **Khai thác:**  
+  - Tải toàn bộ thư mục `.git` về máy bằng các công cụ như `wget` hoặc `git-dumper`.  
+  - Phân tích lịch sử commit để tìm **đoạn mã nhạy cảm** hoặc **dữ liệu hard-code** (API key, thông tin đăng nhập).  
+- **Lưu ý:** Dù không lấy được toàn bộ mã nguồn, nhưng các đoạn `diff` (so sánh thay đổi) cũng có thể tiết lộ thông tin quan trọng.
+
+**Solution**
+Dạo một vòng trang web không có gì bất thường. Dùng ffuf để tìm kiếm thêm.
+![alt text](img/image-9.png)
+Well phat hien thu muc `.git` truy cap va dowload no ve 
+Dùng tool `gitdumper` để crawl dữ liệu git về máy.
+`git_dumper https://url/.git/ /path_folder`
+![alt text](img/image-10.png)
+Dùng VSCode để thuận tiện cho việc tìm kiếm thông tin.
+![alt text](img/image-11.png)
+Password: `i8casim36fzgeq8hvkdv`
+=> Giờ thì thay đổi gói tin để xóa carlos là xong.
+✅ Solved!
