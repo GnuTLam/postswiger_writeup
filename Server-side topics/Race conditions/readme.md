@@ -43,8 +43,8 @@ Tôi tạo 1 group gồm các tab chứa gói tin có nhiệm vụ add promotion
 **Solution**
 Ở bài này chúng ta phải brute force tài khoản của `carlos`. Tuy nhiên vấn đề xảy ra là server giới hạn thời gian nếu nhập sai quá nhiều thì sẽ bị chặn và đợi 15'. Dùng cách như ở bài 1 thì không được do trong bài này race window có lẽ nhỏ hơn rất rất nhiều cho nên ta phải tìm cách tối ưu hơn.
 
-Ở đây gơi ý dung extension cuủ Burp: Turbo Insturder dê cải thiêệ hieệ hieệ suââsuaa
-Duướ đay là steps by steps
+Ở đây gợi ý dùng extension của Burp: Turbo Intruder để cải thiện hiệu suất.
+Dưới đây là các bước:
 ![gửi gói tin qua Turbo Intrusder](image-4.png)
 
 ![Race-single-packet](image-5.png)
@@ -53,4 +53,9 @@ Duướ đay là steps by steps
 
 ![Replace password](image-7.png)
 
-Bawts ddau tan cong
+Bắt đầu tấn công
+![alt text](image-8.png)
+Các gói tin trả về có và ta tìm thấy gói tin đang nhập thành công có mã 302.
+=> `carlos : 12345678`
+
+✅ Solved!
