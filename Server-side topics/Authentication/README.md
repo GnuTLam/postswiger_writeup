@@ -477,8 +477,22 @@ ___
 **Yêu cầu**: Lab có lỗ hổng trong chức năng đổi mật khẩu, cho phép brute-force. Nhiệm vụ: sử dụng danh sách mật khẩu có sẵn để brute-force tài khoản của `carlos`, sau đó đăng nhập và truy cập trang My account của hắn để hoàn thành lab. Bạn có thể đăng nhập vào tài khoản của mình với thông tin `wiener:peter`.
 
 **Thực hiện**
-- Thử chức năng đổi password với tài khoản `wiener`
+- Thử chức năng đổi password với tài khoản `wiener`. Thử các trường hợp để xem phản hồi với mỗi trường hợp. Khi ta thử để `new-password-1=1&new-password-2=2` 2 cái khác nhau thì server trả về `New password not match`.
+![alt text](image-59.png)
+
+- Thử thay tên `carlos` vào `wiener` thì ta lại được `current password is in correct`. Điều này có thể suy đoán được server đã bỏ quên việc xác thực ai đang sử dụng session này carlos or wiener. Server lần lượt kiểm tra xem `password` có đúng với `username` không rồi sau đó mới kiểm tra đến password được set mới.
+![alt text](image-60.png)
+
+- Thực hiện brute-force password với user `carlos`. Ta sẽ biết thành công khi kết quả trả về là `New password not match` ( Do password hiện tại đúng thì server mới kiểm tra đến password mới)
+![alt text](image-61.png)
+
+- Đăng nhập vào tài khoản `carlos` để hoàn thành bài lab.
 
 **Notes**
+Bài lab khai thác lỗ hổng trong chức năng đổi mật khẩu, nơi hệ thống không xác thực đúng cách người dùng trước khi cho phép thay đổi.  
 
+- Khi đổi mật khẩu, hệ thống thường yêu cầu nhập mật khẩu cũ và mật khẩu mới. Nếu cơ chế xác thực giống như trang đăng nhập, nó có thể bị khai thác bằng các kỹ thuật brute-force tương tự.  
+- Nếu ứng dụng cho phép thay đổi mật khẩu mà không xác thực người dùng đúng cách, kẻ tấn công có thể sửa giá trị `username` trong request để đặt lại mật khẩu của bất kỳ tài khoản nào.  
+- Một số hệ thống sử dụng trường `username` ẩn trong request, điều này có thể bị chỉnh sửa để thực hiện brute-force và chiếm quyền điều khiển tài khoản người dùng khác.  
+- Nếu không có giới hạn số lần thử hoặc biện pháp bảo vệ thích hợp, kẻ tấn công có thể tự động hóa quá trình brute-force để thử nhiều mật khẩu khác nhau và chiếm quyền tài khoản mục tiêu.
 
