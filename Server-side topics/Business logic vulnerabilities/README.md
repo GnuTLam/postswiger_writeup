@@ -261,29 +261,82 @@ ___
 
 ## Domain-specific flaws
 
+>Lỗ hổng logic thường liên quan đến quy trình cụ thể của từng ứng dụng. Một ví dụ phổ biến là chức năng giảm giá trên các trang mua sắm trực tuyến.  
+Giả sử một cửa hàng giảm 10% cho đơn hàng trên 1000$. Nếu hệ thống không kiểm tra lại điều kiện giảm giá sau khi giỏ hàng thay đổi, kẻ tấn công có thể dựa vào đó và trục lợi.  
+Bất kỳ tính năng nào điều chỉnh giá theo hành động người dùng đều có nguy cơ bị khai thác. Kẻ tấn công có thể thao túng trạng thái ứng dụng để hưởng lợi bất hợp pháp.  
+Để phát hiện lỗ hổng này, cần tư duy như kẻ tấn công: phân tích cách hệ thống tính giá, xác định thời điểm điều chỉnh giá diễn ra và thử thay đổi dữ liệu.
+Hiểu rõ lĩnh vực hoạt động cũng rất quan trọng, vì lỗ hổng thường xuất hiện khi nhiều chức năng kết hợp không mong muốn.
 ___
 
 ### Lab: Flawed enforcement of business rules
 **Yêu cầu**
-**Thực hiện**
-**Notes**
+This lab has a logic flaw in its purchasing workflow. To solve the lab, exploit this flaw to buy a "Lightweight l33t leather jacket".
+You can log in to your own account using the following credentials: `wiener:peter`
 
+**Thực hiện**
+- Đăng nhập vào tài khoản được cấp. Dự đoán mã kia có thể là mã giảm giá.
+![alt text](image-36.png)
+
+- Thêm đồ, add mã giảm giá, thanh toán.
+![alt text](image-37.png)
+![alt text](image-38.png)
+
+- Tạo mail cho tài khoản và đăng kí nhập mã giảm giá
+![alt text](image-39.png)
+![alt text](image-40.png)
+
+- Add mã giảm giá cho sản phẩm. Add luôn phiên `SIGNUP30` và `NEWCUST5` để bypass cơ chế chống lặp lại của hệ thống. Ta add được rất nhiều mã giảm giá.
+![alt text](image-42.png)
+
+- Thanh toán và hoàn thành bài lab.
+
+**Notes**
+Bài lab này chức năng giảm giá được thiết kế không đúng, thay vì kiểm tra tất cả các mã giảm giá có nào trùng không thì hệ thống lại dựa vào mã giảm giá cuối cùng -> xảy ra lỗ hổng nghiêm trọng có thể dễ dàng bypass.
 ___
 
 ### Lab: Infinite money logic flaw
 **Yêu cầu**
+This lab has a logic flaw in its purchasing workflow. To solve the lab, exploit this flaw to buy a "Lightweight l33t leather jacket".
+You can log in to your own account using the following credentials: `wiener:peter`
+
 **Thực hiện**
+- Đăng nhập và lướt thử. Ta thấy ở đây có gift card. Chắc hẳn phải có tác dụng gì đó. Mua thử và quan sát gói tin.
+![alt text](image-43.png)
+
+- Giờ sử dụng các đoạn code `GIFTCARD` đó, dùng Intruder cho nhanh.
+![alt text](image-44.png)
+
+- Mỗi mã code sử dụng là được 10\$ -> Vậy thì ta cứ mua và sử dụng `GIFTCARD` như vậy xem lãi được nhiêu.
+![alt text](image-45.png)
+![alt text](image-46.png)
+
+- Sau một hồi mua mã add giảm giá và sử dụng thì ta đã có đủ tiền. Mua áo và hoàn thành lab.
+![alt text](image-47.png)
+
 **Notes**
+Việc thanh toán mua mã code bằng mã giảm giá khiến kẻ tấn công có thể trục lợi 30\% từ hệ thống.
 
 ___
 
 ## Providing an encryption oracle
+>Encryption Oracle xảy ra khi người dùng có thể mã hóa dữ liệu bằng thuật toán của hệ thống và sử dụng ciphertext này để khai thác các chức năng quan trọng.  
+Kẻ tấn công có thể gửi dữ liệu tùy ý để mã hóa, sau đó sử dụng ciphertext hợp lệ để giả mạo thông tin, chiếm quyền truy cập hoặc thao túng hệ thống. Nguy cơ cao hơn nếu hệ thống có chức năng giải mã, giúp kẻ tấn công phân tích và tạo dữ liệu độc hại.  
+Lỗ hổng này đặc biệt nguy hiểm với xác thực, quản lý quyền và dữ liệu nhạy cảm. Để phòng tránh, không cho phép người dùng sử dụng trực tiếp hệ thống mã hóa, không dùng chung thuật toán cho nhiều chức năng và cần xác thực dữ liệu mã hóa trước khi xử lý.
 
 ___
 
 ### Lab: Authentication bypass via encryption oracle
 **Yêu cầu**
+This lab contains a logic flaw that exposes an encryption oracle to users. To solve the lab, exploit this flaw to gain access to the admin panel and delete the user `carlos`.
+You can log in to your own account using the following credentials: `wiener:peter `
+
 **Thực hiện**
+- Đăng nhập bằng tài khoản được cấp. Chọn `stayed-login`. Quan sát gói tin Burp
+![alt text](image-48.png)
+![alt text](image-49.png)
+
+
+
 **Notes**
 
 ___
