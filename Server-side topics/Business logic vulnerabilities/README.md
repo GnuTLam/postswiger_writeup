@@ -335,9 +335,47 @@ You can log in to your own account using the following credentials: `wiener:pete
 ![alt text](image-48.png)
 ![alt text](image-49.png)
 
+- Tiếp tục thử các chức năng khác. Để ý khi đăng comment gói tin Burp cho thấy thông tin đáng ngờ.
+![alt text](image-50.png)
 
+- Chúng ta để ý dòng này :`Set-Cookie: notification=ZD52Chl8c1yd5Ssy%2bsywZeNl0jjJDNwI%2bHiCfU0vHpQ%3d;`. Dựa vào tên tôi đoán cái này có thể dùng để thông báo gì đó . Gắn cookie này vào gói tin và thử follow redirect.
+![alt text](image-51.png)
+
+- Có thể `notification` được phía server giải mã -> hiện thị ra nội dung. Để ý ban đầu ta cũng có cookie `stayed-login` cũng có dạng như vậy ( Liệu có thể đây cũng là một encrypt sử dụng cùng 1 thuật toán với notification ????)
+- Thay thử cookie giá trị`stayed-login` vào chỗ `notification` xem hiện thị gì
+![alt text](image-52.png)
+
+- Giá trị hiện ra gồm name và timestamp ( sử dụng convert timestamp để chứng minh giả thuyết).
+![alt text](image-53.png)
+
+- Mã nguồn HTML này cho ta biết cơ chế của form comment.
+![alt text](image-54.png)
+
+- Ta thay đổi trường `email` sao cho không đúng định dạng nữa
+![alt text](image-56.png)
+![alt text](image-55.png)
+
+- Việc bây giờ là thay email thành `wiener:1741453786399` để so sánh với `administrator:1741453786399`:
+
+| Text | Encrypted Value |
+|------|-----------------|
+| `wiener:1741453786399` | `Pz52NFYcCAsD4qnTTVF/1Q+Oji9OIcecfVN6HCJg9xo=` |
+| `Invalid email address: wiener:1741453786399` | `yrZMeZu34ilYdmesTd4ZxcxfWLeL90IWTgbpOxZJ/K00cENoMKyhoLhsdU6goFIA` |
+| `Invalid email address: administrator:1741453786399` | `yrZMeZu34ilYdmesTd4ZxY47BVe/s5LqmKYq+cY9gZI0cENoMKyhoLhsdU6goFIA` |
+
+
+- Còn một vấn đề nữa là làm sao để loại bỏ chuỗi `Invailid ...` phía trước payload của ta ? Mã kia là Base64 -> Decode Base64 rồi xóa đi các byte thừa. Chuỗi `Invailid ...` gồm 23 kí tự, vậy thì xóa đi 23 byte đầu.
+![alt text](image-57.png)
+
+- Có lỗi xảy ra do thiếu phần đệm ( lỗi này ở các chế độ mật mã khối khi input vào phải là 2bytes). Các đoạn mật mã đã được đệm đầy đủ ( số byte chia hết cho 16 ) vậy thì khi ta bỏ đi 23 byte thì xảy ra lỗi như trên. Do đó số byte cần bỏ phải chia hết cho 16 -> chọn 32 byte. Nhưng để không bị mất đi nội dung ta sẽ chèn thêm 9 kí tự vào trước để khi xóa 32 byte ta được đoạn mật mã chuẩn.
+![alt text](image-58.png)
+![alt text](image-59.png)
+
+- Thay đoạn mật mã đó vào chỗ stay-login rồi hoàn thành nốt bài lab.
+![alt text](image-60.png)
 
 **Notes**
+Ở bài lab này chúng ta tấn công vào cơ chế sử dụng mã hóa không an toàn. Việc để lộ thông tin thông qua cookie là vấn đề bảo mật. Và ta cũng phát hiện ra cách để tạo ra mật mã thông qua chức năng `cmt`.
 
 ___
 
