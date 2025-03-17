@@ -112,63 +112,87 @@ Ngoài ra kĩ thuật Alternative IP được đề cập trong bài cũng khá 
 
 **Yêu cầu**
 This lab has a stock check feature which fetches data from an internal system.
-
 To solve the lab, change the stock check URL to access the admin interface at `http://localhost/admin` and delete the user `carlos`.
-
 The developer has deployed an anti-SSRF defense you will need to bypass.
 
 **Thực hiện**
-![alt text](image-29.png)
+- Quan sát gói tin chức năng checkStock. Thử với các payload gây lỗi bên trên.
+![alt text](image-10.png)
+![alt text](image-11.png)
 
-![alt text](image-30.png)
+- Dựa vào thông báo lỗi thì ta đổi payload sang `http://localhost%252f@stock.weliketoshop.net`
 
-![alt text](image-31.png)
-
-![alt text](image-32.png)
-
-![alt text](image-33.png)
-
-![alt text](image-34.png)
-
-![alt text](image-35.png)
-
-![alt text](image-36.png)
+- Thực hiện payload `http://localhost%252f@stock.weliketoshop.net/admin`. Và sau đó xóa username `carlos`
+![alt text](image-12.png)
 
 **Notes**
 
-**Kí tự `@`**
-URL chuẩn có format: `[protocol]://[username]:[password]@[hostname]...`
-Ví dụ: `https://user:pass@hostname/path`
+- *Kí tự `@`*
+>URL chuẩn có format: `[protocol]://[username]:[password]@[hostname]...`
+Ví dụ: `https://user:pass@hostname/path` -> Ý nghĩa: truy cập tới hostname/path với thông tin xác nhận (user:pass trong trường hợp nếu có)
 Nếu whitelist-check chỉ kiểm tra phần đầu của URL, nó có thể thấy:
 `https://expected-host:fakepassword@evil-host`
 và cho rằng hostname là expected-host (vì nó dừng kiểm tra sớm khi thấy expected-host:). Nhưng thực tế thì trước phần `@` đều là thông tin xác thực, còn hostname ở sau kí tự `@`
 
-**Ký tự `#`**
-Trong một URL, dấu # thường đánh dấu fragment (phần neo, anchor) phía client.
+- *Ký tự `#`*
+>Trong một URL, dấu # thường đánh dấu fragment (phần neo, anchor) phía client.
 Ví dụ: `https://example.com/page#section2`
 1 số bộ lọc không kiểm tra cẩn thận, chỉ kiểm tra xem có chuỗi `expected-host` trong url hay không -> tạo ra payload: `https://evil-host#expected-host`
 Bộ lọc thấy `expected-host` trong chuỗi, nên cho qua.Nhưng trình duyệt/server có thể coi host chính là evil-host, còn #expected-host là fragment. Kết quả: request thực sự đi đến `evil-host`.
 
-**Lợi dụng cấu trúc DNS**
-DNS cho phép sử dụng dạng subdomain. Nếu whitelist đòi hỏi hostname phải chứa expected-host, ta có thể đăng ký (hoặc sử dụng) một domain có dạng: `expected-host.evil-host.com`. Ứng dụng thấy cụm expected-host trong domain, nên nó cho rằng hợp lệ. Nhưng DNS thực tế lại trỏ expected-host.evil-host.com đến server của kẻ tấn công.
+- *Lợi dụng cấu trúc DNS*
+>DNS cho phép sử dụng dạng subdomain. Nếu whitelist đòi hỏi hostname phải chứa expected-host, ta có thể đăng ký (hoặc sử dụng) một domain có dạng: `expected-host.evil-host.com`. Ứng dụng thấy cụm expected-host trong domain, nên nó cho rằng hợp lệ. Nhưng DNS thực tế lại trỏ expected-host.evil-host.com đến server của kẻ tấn công.
 Kết quả: request vẫn đến evil-host, chứ không phải expected-host.com
+
+![alt text](image-13.png)
+
+---
+
+
+## Lab: SSRF with filter bypass via open redirection vulnerability
+
+**Yêu cầu**
+This lab has a stock check feature which fetches data from an internal system.
+To solve the lab, change the stock check URL to access the admin interface at `http://192.168.0.12:8080/admin` and delete the user `carlos`.
+The stock checker has been restricted to only access the local application, so you will need to find an open redirect affecting the application first.
+
+**Thực hiện**
+- Quan sát request và response của chức năng checkStock. Cấu trúc `stockApi` đã khác khi trong tham số không còn phần protocol
+![alt text](image-14.png)
+
+- Chúng ta để ý gói tin nextProduct. Ở đây tiết lộ thêm thông tin liên quan tới parameter `path` được dùng để định hướng vậy ta sử dụng điều này để tạo payload mới.
+![alt text](image-15.png)
+Payload 1: `stockApi=/product/nextProduct?currentProductId=1&path=/product?productId=2`
+
+Payload 2:`stockApi=/product/nextProduct?currentProductId=1%26path=http://192.168.0.12:8080/admin`
+![alt text](image-16.png)
+
+- Xóa `carlos` để hoàn thành lab.
+
+**Note**
+Chúng ta có thể tận dụng các chức năng chuyển hướng thông qua `GET` như trên. Điều này có thể bypass các cơ chế whitelist như bài lab trước.
+
+---
 
 ## Lab: Blind SSRF with out-of-band detection
 
 **Yêu cầu**
 This site uses analytics software which fetches the URL specified in the Referer header when a product page is loaded.
-
 To solve the lab, use this functionality to cause an HTTP request to the public Burp Collaborator server.
 
 **Thực hiện**
-![alt text](image-39.png)
+- Dựa vào yêu cầu đề bài, bài lab sử dụng Referer header làm thông tin để phân tích. 
+- Quan sát gói tin và thay đổi header Referer.
+![alt text](image-17.png)
 
-![alt text](image-40.png)
+- Thay thế bằng `Burp Collaborator`
+![alt text](image-18.png)
+![alt text](image-19.png)
 
-![alt text](image-41.png)
+- Điều này chứng tỏ phía server thực sự `fetch` đến url trong trường `Referer` -> Có lỗ hổng SSRF tại đây.
 
 **Notes**
-Web được cấu hình để thực hiện HTTP request đến URL ghi nhận trong header Referer để thu thập thông tin thống kê. Khi kẻ tấn công gửi request lên server, có thể tuỳ ý thay đổi giá trị Referer. Do cơ chế, server tự động truy cập URL lấy từ Referer. Hacker lợi dụng điều này để bắt server truy cập vào bất kỳ URL nội bộ nào. Trong trường hợp này, sẽ là blind ssrf vì phản hồi trực tiếp không hiển thị cho hacker, nhưng hacker có thể kiểm chứng qua out-of-band (OOB) – ví dụ như sử dụng Burp Collaborator hoặc Webhook để quan sát tương tác.
+SSRF thường xuất hiện ở các chức năng có quá trình trao đổi dữ liệu với một trang web khác. Và chúng ta cũng cần có một phương pháp để kiểm tra khả năng xảy ra của lỗ hổng SSRF. Một trong những phương pháp kiểm tra phổ biến và đơn giản nhất chính là kỹ thuật out-of-band (OAST)
 
 ## Blind SSRF with Shellshock exploitation
 
