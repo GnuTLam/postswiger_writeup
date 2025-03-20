@@ -188,7 +188,7 @@ Lưu ý: Kỹ thuật này có thể không hoạt động nếu dữ liệu có
 
 ## Exploiting blind XXE to retrieve data via error messages
 
-## 6.Exploiting blind XXE to retrieve data via error messages
+### 6.Exploiting blind XXE to retrieve data via error messages
 **Yêu cầu**
 This lab has a "Check stock" feature that parses XML input but does not display the result.
 To solve the lab, use an external DTD to trigger an error message that displays the contents of the `/etc/passwd` file.
@@ -222,3 +222,100 @@ The lab contains a link to an exploit server on a different domain where you can
 **Note**
 Trong một số trường hợp khi chúng ta sử dụng sai cú pháp XML dẫn đến quá trình phân tích cú pháp dữ liệu gặp lỗi, lúc này hệ thống thường trả về các đoạn thông báo lỗi (error message), chúng có thể chứa một số thông tin nhạy cảm.
 Bằng cách đưa luồng xử lý hệ thống đi vào trường hợp error, chúng ta có thể kết hợp sử dụng external DTD nhằm "gửi" nội dung file bất kỳ vào các đoạn thông báo lỗi, từ đó hiển thị chúng trong giao diện.
+
+
+## Exploiting blind XXE by repurposing a local DTD
+### 7. Exploiting XXE to retrieve data by repurposing a local DTD
+**Yêu cầu**
+This lab has a "Check stock" feature that parses XML input but does not display the result.
+To solve the lab, trigger an error message containing the contents of the `/etc/passwd` file.
+You'll need to reference an existing DTD file on the server and redefine an entity from it.
+
+>Hint
+Systems using the GNOME desktop environment often have a DTD at `/usr/share/yelp/dtd/docbookx.dtd` containing an entity called `ISOamso`.
+
+**Thực hiện**
+- Thực hiện kiểm tra XXE Injection thông qua Burp Colaborator
+![alt text](image-18.png)
+![alt text](image-19.png)
+
+- Theo nội dung bài lab, chúng sẽ tận dụng bằng việc load file `.dtd` local và ghi đè lại các parameter entity có. Khi đó ta có thể khai báo thêm các entity khác.
+Payload:
+```
+<!DOCTYPE foo [
+<!ENTITY % local_dtd SYSTEM "file:///usr/share/yelp/dtd/docbookx.dtd">
+<!ENTITY % ISOamso '
+<!ENTITY &#x25; file SYSTEM "file:///etc/passwd">
+<!ENTITY &#x25; eval "<!ENTITY &#x26;#x25; error SYSTEM &#x27;file:///nonexistent/&#x25;file;&#x27;>">
+&#x25;eval;
+&#x25;error;
+'>
+%local_dtd;
+]>
+```
+
+- Hoàn thành bài lab.
+![alt text](image-20.png)
+
+**Note**
+Khi bạn sử dụng một internal DTD (khai báo DTD trong XML) và external DTD (khai báo DTD từ một tệp ngoài), internal DTD có thể ghi đè các khai báo trong external DTD. Điều này có thể tạo ra một lỗ hổng bảo mật và cho phép kẻ tấn công khai thác bằng cách sử dụng parameter entity để tham chiếu vào một entity khác — điều mà thông thường không được phép.
+
+
+## Finding hidden attack surface for XXE injection
+
+### 8.Exploiting XInclude to retrieve files
+**Yêu cầu**
+This lab has a "Check stock" feature that embeds the user input inside a server-side XML document that is subsequently parsed.
+Because you don't control the entire XML document you can't define a DTD to launch a classic XXE attack.
+To solve the lab, inject an XInclude statement to retrieve the contents of the `/etc/passwd` file.
+
+>Hint
+By default, XInclude will try to parse the included document as XML. Since `/etc/passwd` isn't valid XML, you will need to add an extra attribute to the XInclude directive to change this behavior.
+
+**Thực hiện**
+- Vẫn như các bài lab trước, ta sẽ quan sát gói tin request và response chức năng checkStock. Bài lab này không còn sử dụng POST với tài liệu XML nữa mà dùng cách data để truyền.
+![alt text](image-21.png)
+
+- Thử với payload đặc biệt `%` thì hiện ra lỗi `Entities are not allowed` -> điều này chứng tỏ trang web này có quá trình phân tích XML.
+![alt text](image-22.png)
+
+- Với kiến thức từ bài lab, ta đoán rằng ở bài lab này sử dụng `XInclude`. Tức là tham số ở `productId` hoặc `storeId` sẽ được truyền vào trong một tệp XML để xử lí. Ta có thể lợi dụng điều này để truyền vào đoạn mã `XInclude`.
+- Payload:
+```
+<foo xmlns:xi="http://www.w3.org/2001/XInclude"><xi:include parse="text" href="file:///etc/passwd"/></foo>
+```
+![alt text](image-23.png)
+
+- Hoàn thành bài lab.
+
+**Note**
+Trong tình huống bạn chỉ kiểm soát một phần dữ liệu (như trong bài lab này), bạn có thể chèn đoạn mã XInclude vào đó. Khi server nhúng dữ liệu của bạn vào XML và xử lý, XInclude sẽ kích hoạt và truy cập tài nguyên mà không cần bạn định nghĩa `<!DOCTYPE>`.
+
+```
+<foo xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include parse="text" href="file:///etc/passwd"/>
+</foo>
+```
+`xmlns:xi="http://www.w3.org/2001/XInclude"`: Khai báo namespace để sử dụng XInclude.
+`<xi:include>`: Thẻ yêu cầu nhúng nội dung từ một nguồn khác.
+`parse="text"`: Chỉ định rằng nội dung được nhúng là văn bản thô (text), không phải XML.
+`href="file:///etc/passwd"`: Đường dẫn đến tệp hoặc tài nguyên bạn muốn truy cập.
+
+### 9.Exploiting XXE via image file upload
+**Yêu cầu**
+This lab lets users attach avatars to comments and uses the Apache Batik library to process avatar image files.
+To solve the lab, upload an image that displays the contents of the `/etc/hostname` file after processing. Then use the "Submit solution" button to submit the value of the server hostname. 
+
+**Thực hiện**
+- Trước tiên chúng ta cần xác định vị trí có lỗ hổng. Quan sát gói tin request và response ở chức năng Post Comment.
+![alt text](image-24.png)
+
+- Một số ứng dụng support hình ảnh có thể hỗ trợ cả file `.svg`. Thử upload file svg lên.
+![alt text](image-25.png)
+
+- Upload thành công -> điều này có thể khẳng định svg được hỗ trợ, và chúng ta có thể dựa vào đây để chèn XML.
+
+**Note**
+Ứng dụng có thể yêu cầu người dùng tải lên hình ảnh ở định dạng phổ biến như PNG hoặc JPEG.
+Tuy nhiên, thư viện xử lý hình ảnh (như ImageMagick, PIL, hoặc một parser XML) lại hỗ trợ SVG mà không có kiểm tra định dạng nghiêm ngặt.
+Hacker có thể tải lên một tệp SVG chứa mã XXE thay vì PNG/JPEG.
