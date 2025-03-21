@@ -314,8 +314,14 @@ To solve the lab, upload an image that displays the contents of the `/etc/hostna
 ![alt text](image-25.png)
 
 - Upload thành công -> điều này có thể khẳng định svg được hỗ trợ, và chúng ta có thể dựa vào đây để chèn XML.
-
+```xml
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg [
+    <!ENTITY xxe SYSTEM "file:///etc/hostname">
+]>
+<svg width="500" height="500" xmlns="http://www.w3.org/2000/svg">
+    <text x="10" y="50" font-size="20">&xxe;</text>
+</svg>
+```
 **Note**
-Ứng dụng có thể yêu cầu người dùng tải lên hình ảnh ở định dạng phổ biến như PNG hoặc JPEG.
-Tuy nhiên, thư viện xử lý hình ảnh (như ImageMagick, PIL, hoặc một parser XML) lại hỗ trợ SVG mà không có kiểm tra định dạng nghiêm ngặt.
-Hacker có thể tải lên một tệp SVG chứa mã XXE thay vì PNG/JPEG.
+Ứng dụng có thể yêu cầu người dùng tải lên hình ảnh ở các định dạng phổ biến như PNG hoặc JPEG để sử dụng làm avatar. Tuy nhiên, trong trường hợp này, thư viện xử lý hình ảnh được sử dụng (cụ thể là Apache Batik, một thư viện chuyên xử lý định dạng SVG) lại hỗ trợ các tệp SVG mà không thực hiện kiểm tra định dạng nghiêm ngặt ở phía ứng dụng. Điều này tạo ra một lỗ hổng bảo mật: mặc dù giao diện hoặc yêu cầu của ứng dụng hướng tới các định dạng ảnh raster thông thường (như PNG/JPEG), hacker vẫn có thể lợi dụng khả năng xử lý SVG của thư viện để tải lên một tệp SVG. Tệp SVG này, vốn là một định dạng dựa trên XML, có thể được thiết kế để chứa mã khai thác XML External Entity (XXE). Khi tệp SVG được xử lý bởi Apache Batik, mã XXE bên trong có thể bị kích hoạt, cho phép hacker truy cập dữ liệu nhạy cảm (như nội dung của /etc/hostname) mà không bị chặn bởi các biện pháp kiểm tra định dạng phía ứng dụng.
